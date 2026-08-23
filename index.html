@@ -53,7 +53,8 @@
     color:var(--text);
     display:flex;
     flex-direction:column;
-    min-height:100vh;
+    height:100vh;
+    overflow:hidden;
   }
   header{
     display:flex;
@@ -114,7 +115,7 @@
     border:1px solid var(--border);
   }
   button.btn.secondary:hover{background:var(--bg);}
-  #layout{height:calc(100vh - 64px);display:flex;min-height:0;}
+  #layout{flex:1;display:flex;min-height:0;}
   #map{flex:1;min-width:0;}
   #sidebar{
     width:300px;
@@ -162,20 +163,6 @@
   .report-card .name{font-size:13.5px;font-weight:600;margin:0 0 2px;}
   .report-card .notes{font-size:12.5px;color:var(--text-muted);margin:0;}
   .empty-state{padding:16px;font-size:12.5px;color:var(--text-muted);}
-
-  #deletion-log-section{padding:20px 16px 40px;max-width:900px;margin:0 auto;}
-  #deletion-log-section h2{font-size:15px;margin:0 0 12px;}
-  #deletion-log-list{display:flex;flex-direction:column;gap:8px;}
-  .deletion-entry{
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:10px 12px;
-    background:var(--panel);
-  }
-  .deletion-entry .top-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
-  .deletion-entry .date{font-size:11px;color:var(--text-muted);margin-left:auto;}
-  .deletion-entry .name{font-size:13.5px;font-weight:600;margin:0 0 2px;}
-  .deletion-entry .comment{font-size:12.5px;color:var(--text-muted);margin:0;}
 
   .leaflet-popup-content{font-size:13px;min-width:190px;}
   .leaflet-popup-content .tag{margin:0 4px 5px 0;}
@@ -299,11 +286,6 @@
     <h2>Reports</h2>
     <div id="report-list"></div>
   </div>
-</div>
-
-<div id="deletion-log-section">
-  <h2>Deletion Log</h2>
-  <div id="deletion-log-list"></div>
 </div>
 
 <div id="modal-overlay">
@@ -625,63 +607,24 @@
   }
 
   var DELETE_PASSWORD = 'gjc';
-  var deletionLog = [];
 
   function deleteReport(id){
-    var r = reports.find(function(x){return x.id===id;});
-    if(!r) return;
-
     var pass = prompt('Enter password to delete this report:');
     if(pass === null) return;
     if(pass !== DELETE_PASSWORD){ alert('Incorrect password.'); return; }
-
-    var comment;
-    while(true){
-      comment = prompt('Please enter a comment explaining why this report is being deleted (required):');
-      if(comment === null) return;
-      comment = comment.trim();
-      if(comment) break;
-      alert('A comment is required to delete a report.');
-    }
 
     map.closePopup();
     var m = markers[id];
     if(m){ map.removeLayer(m); delete markers[id]; }
     reports = reports.filter(function(x){return x.id !== id;});
-
-    deletionLog.unshift({
-      name: r.name,
-      type: r.type,
-      date: r.date,
-      comment: comment,
-      deletedAt: new Date().toISOString().slice(0,10)
-    });
-
     refreshCounts();
     renderList();
-    renderDeletionLog();
-  }
-
-  function renderDeletionLog(){
-    var list = document.getElementById('deletion-log-list');
-    if(deletionLog.length === 0){
-      list.innerHTML = '<div class="empty-state">No reports have been deleted.</div>';
-      return;
-    }
-    list.innerHTML = deletionLog.map(function(d){
-      return '<div class="deletion-entry">'+
-        '<div class="top-row"><span class="tag '+d.type+'">'+d.type+'</span><span class="date">deleted '+d.deletedAt+'</span></div>'+
-        '<p class="name">'+escapeHtml(d.name)+'</p>'+
-        '<p class="comment"><strong>Reason:</strong> '+escapeHtml(d.comment)+'</p>'+
-      '</div>';
-    }).join('');
   }
 
   // init
   reports.forEach(addMarker);
   refreshCounts();
   renderList();
-  renderDeletionLog();
 </script>
 </body>
 </html>
