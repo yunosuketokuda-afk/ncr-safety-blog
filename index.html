@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCR Incident Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --panel:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --text-muted:#6b7280;
+    --critical:#dc2626;
+    --scam:#7c3aed;
+    --scam-bg:#f3e8ff;
+    --theft:#0d9488;
+    --theft-bg:#ccfbf1;
+    --violence:#4338ca;
+    --violence-bg:#e0e7ff;
+    --accent:#0f766e;
+    --accent-hover:#0d5f59;
+    --shadow: 0 2px 10px rgba(20,20,30,0.08), 0 1px 2px rgba(20,20,30,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161a;
+      --panel:#1d2027;
+      --border:#2c303a;
+      --text:#eceef2;
+      --text-muted:#9aa1ad;
+      --scam-bg:#2c1a4a;
+      --theft-bg:#0f2e2a;
+      --violence-bg:#20204a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161a;
+    --panel:#1d2027;
+    --border:#2c303a;
+    --text:#eceef2;
+    --text-muted:#9aa1ad;
+    --scam-bg:#2c1a4a;
+    --theft-bg:#0f2e2a;
+    --violence-bg:#20204a;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+  header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 16px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+    z-index:1000;
+  }
+  .title-block{display:flex;flex-direction:column;gap:2px;min-width:180px;padding-top:2px;}
+  .title-block h1{font-size:16px;margin:0;font-weight:650;}
+  .title-block span{font-size:12px;color:var(--text-muted);}
+  .toolbar{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .chip-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .chip-group .group-label{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--text-muted);margin-right:1px;
+  }
+  .actions-group{display:flex;align-items:center;gap:8px;padding-top:1px;}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    padding:6px 12px;
+    font-size:13px;
+    font-weight:560;
+    cursor:pointer;
+    user-select:none;
+    transition:opacity .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  .chip:active{transform:scale(0.97);}
+  .chip .shape{width:11px;height:11px;flex:none;display:flex;align-items:center;justify-content:center;}
+  .chip.off{opacity:0.4;}
+  .chip.scam{background:var(--scam-bg);color:var(--scam);border-color:transparent;}
+  .chip.theft{background:var(--theft-bg);color:var(--theft);border-color:transparent;}
+  .chip.violence{background:var(--violence-bg);color:var(--violence);border-color:transparent;}
+  button.btn{
+    display:flex;align-items:center;gap:6px;
+    border:none;
+    border-radius:8px;
+    background:var(--accent);
+    color:#fff;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  button.btn:hover{background:var(--accent-hover);}
+  button.btn.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  button.btn.secondary:hover{background:var(--bg);}
+  #layout{flex:1;display:flex;min-height:0;}
+  #map{flex:1;min-width:0;}
+  #sidebar{
+    width:300px;
+    flex:none;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #sidebar.hidden{display:none;}
+  #sidebar h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--text-muted);
+    margin:0;
+    padding:12px 14px 8px;
+  }
+  #report-list{
+    flex:1;
+    overflow-y:auto;
+    padding:0 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .report-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .report-card:hover{background:var(--bg);}
+  .report-card .top-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
+  .tag{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+    padding:2px 7px;border-radius:999px;
+  }
+  .tag.scam{background:var(--scam-bg);color:var(--scam);}
+  .tag.theft{background:var(--theft-bg);color:var(--theft);}
+  .tag.violence{background:var(--violence-bg);color:var(--violence);}
+  .report-card .date{font-size:11px;color:var(--text-muted);margin-left:auto;}
+  .report-card .name{font-size:13.5px;font-weight:600;margin:0 0 2px;}
+  .report-card .notes{font-size:12.5px;color:var(--text-muted);margin:0;}
+  .empty-state{padding:16px;font-size:12.5px;color:var(--text-muted);}
+
+  .leaflet-popup-content{font-size:13px;min-width:190px;}
+  .leaflet-popup-content .tag{margin:0 4px 5px 0;}
+  .leaflet-popup-content .popup-name{font-weight:650;margin:2px 0 3px;font-size:13.5px;}
+  .leaflet-popup-content .popup-date{color:var(--text-muted);font-size:11.5px;margin-bottom:5px;}
+  .leaflet-popup-content .popup-notes{margin-bottom:6px;}
+  .leaflet-popup-content .popup-delete{
+    border:none;background:none;color:var(--critical);font-size:12px;cursor:pointer;padding:0;font-weight:600;
+  }
+  .article-link{
+    display:inline-block;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;
+  }
+  .article-link:hover{text-decoration:underline;}
+  .leaflet-popup-content .article-link{margin-bottom:6px;}
+  .report-card .article-link{margin:2px 12px 2px;}
+
+  /* YouTube thumbnail link â used in popups, list cards, and marker icons.
+     Clicking it opens the video directly on youtube.com in a new tab.
+     .yt-fallback sits underneath the <img> at all times; if the image
+     loads, it visually covers the fallback completely, if it 404s/blocks,
+     removing the <img> (via onerror) reveals a clear "watch on YouTube"
+     placeholder instead of a blank box. */
+  .yt-thumb{
+    position:relative;display:block;overflow:hidden;border-radius:8px;
+    background:linear-gradient(135deg,#2a2f3a,#1a1d24);margin-bottom:6px;
+  }
+  .yt-thumb .yt-fallback{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;color:#fff;text-align:center;padding:8px;
+  }
+  .yt-thumb .yt-fallback span{font-size:11.5px;font-weight:600;opacity:0.9;}
+  .yt-thumb img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;}
+  .yt-thumb .play-badge{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  }
+  .yt-thumb .play-badge svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6));}
+  .leaflet-popup-content .yt-thumb{width:240px;height:135px;}
+  .report-card .yt-thumb{width:100%;height:110px;margin-bottom:6px;}
+  .marker-yt-thumb{
+    display:block;width:30px;height:30px;border-radius:7px;overflow:hidden;position:relative;
+    box-shadow:0 1px 4px rgba(0,0,0,0.5);
+    background:linear-gradient(135deg,#2a2f3a,#1a1d24);
+  }
+  .marker-yt-thumb .yt-fallback{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  }
+  .marker-yt-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .marker-yt-thumb .ring{
+    position:absolute;inset:0;border-radius:7px;box-sizing:border-box;border-width:3px;border-style:solid;
+  }
+  .marker-yt-thumb .play-dot{
+    position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;border-radius:50%;
+    background:#ff0000;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;
+  }
+
+  #add-banner{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    background:var(--accent);color:#fff;padding:8px 16px;border-radius:999px;
+    font-size:13px;font-weight:600;box-shadow:var(--shadow);
+    z-index:1200;display:none;align-items:center;gap:10px;
+  }
+  #add-banner button{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;}
+
+  #modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.35);
+    display:none;align-items:center;justify-content:center;z-index:2000;
+  }
+  #modal{
+    background:var(--panel);border-radius:12px;padding:20px;width:320px;
+    box-shadow:var(--shadow);
+  }
+  #modal h3{margin:0 0 12px;font-size:15px;}
+  #modal label{display:block;font-size:12px;color:var(--text-muted);margin:10px 0 4px;}
+  #modal input[type=text], #modal input[type=date], #modal select, #modal textarea{
+    width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;
+    font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;
+  }
+  #modal textarea{resize:vertical;min-height:50px;}
+  #modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+  .leaflet-control-attribution{font-size:10.5px;}
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>NCR Incident Map</h1>
+    <span>Delhi &amp; Gurugram &middot; live OpenStreetMap, free &amp; no API key</span>
+  </div>
+  <div class="toolbar">
+    <div class="chip-group" id="type-group">
+      <span class="group-label">Type</span>
+      <div class="chip scam" data-val="scam" onclick="toggleFilter(this,'scam')">
+        <span class="shape">â</span><span id="count-type-scam">0</span> Scam
+      </div>
+      <div class="chip theft" data-val="theft" onclick="toggleFilter(this,'theft')">
+        <span class="shape">â </span><span id="count-type-theft">0</span> Theft
+      </div>
+      <div class="chip violence" data-val="violence" onclick="toggleFilter(this,'violence')">
+        <span class="shape">â²</span><span id="count-type-violence">0</span> Violence
+      </div>
+    </div>
+    <div class="actions-group">
+      <button class="btn secondary" onclick="toggleSidebar()">List</button>
+      <button class="btn" id="add-report-btn" onclick="startAddReport()">+ Add Report</button>
+    </div>
+  </div>
+</header>
+
+<div id="layout">
+  <div id="map">
+    <div id="add-banner">
+      <span>Click anywhere on the map to place the report</span>
+      <button onclick="cancelAddReport()">Cancel</button>
+    </div>
+  </div>
+  <div id="sidebar">
+    <h2>Reports</h2>
+    <div id="report-list"></div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal">
+    <h3>New report</h3>
+    <label>Title / location</label>
+    <input type="text" id="f-name" placeholder="e.g. Cyber Hub Junction">
+    <label>Type</label>
+    <select id="f-type">
+      <option value="scam">Scam</option>
+      <option value="theft" selected>Theft</option>
+      <option value="violence">Violence</option>
+    </select>
+    <label>Date</label>
+    <input type="date" id="f-date">
+    <label>Notes</label>
+    <textarea id="f-notes" placeholder="Optional details"></textarea>
+    <label>YouTube video <span style="font-weight:400;">(optional)</span></label>
+    <input type="text" id="f-video" placeholder="Paste a YouTube link, e.g. youtube.com/watch?v=...">
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitReport()">Save report</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // ---- seed data (example placeholder reports â replace with real submissions) ----
+  // Each report is classified by a single axis: type (Scam/Theft/Violence).
+  var reports = [
+    {id:1,  name:"Cyber Hub, Gurugram",             type:"scam",     date:"2026-03-14", notes:"Fake ride-share/QR payment scam targeting visitors near the hub entrance.", lat:28.4950, lng:77.0910},
+    {id:2,  name:"Karol Bagh Market",               type:"scam",     date:"2026-04-02", notes:"Fake discount electronics stall collecting advance payments then vanishing.", lat:28.6517, lng:77.1900},
+    {id:3,  name:"Sarojini Nagar Market",           type:"theft",    date:"2026-04-20", notes:"Pickpocketing reported during peak weekend shopping hours.", lat:28.5735, lng:77.1998},
+    {id:4,  name:"Connaught Place, Inner Circle",   type:"theft",    date:"2026-05-18", notes:"Phone snatching from an outdoor cafe table.", lat:28.6315, lng:77.2167},
+    {id:5,  name:"Nehru Place",                     type:"violence", date:"2026-06-01", notes:"Chain-snatching attempt escalated into a physical altercation.", lat:28.5494, lng:77.2519},
+    {id:6,  name:"MG Road Metro Station, Gurugram", type:"theft",    date:"2026-06-10", notes:"Bag snatching reported near the metro exit gate.", lat:28.4783, lng:77.0902},
+    {id:7,  name:"Paharganj",                       type:"scam",     date:"2026-06-22", notes:"Fake tour-booking counters overcharging tourists for train tickets.", lat:28.6449, lng:77.2107},
+    {id:8,  name:"Rajiv Chowk Metro Station",       type:"violence", date:"2026-07-03", notes:"Altercation between commuters during rush hour, minor injuries.", lat:28.6328, lng:77.2197},
+    {id:9,  name:"Noida Sector 18",                 type:"scam",     date:"2026-07-15", notes:"Fake delivery-failure/OTP phishing calls reported in the area.", lat:28.5708, lng:77.3216},
+    {id:10, name:"Dwarka Sector 21",                type:"violence", date:"2026-07-28", notes:"Assault reported near a residential complex entrance.", lat:28.5921, lng:77.0460},
+    {id:11, name:"Lajpat Nagar Market",             type:"scam",     date:"2026-08-01", notes:"Fake charity-collection scam targeting shoppers.", lat:28.5677, lng:77.2431},
+    {id:12, name:"Sector 14, Gurugram",             type:"scam",     date:"2026-08-04", notes:"Online marketplace seller scam reported by residents.", lat:28.4675, lng:77.0266},
+    {id:13, name:"Chandni Chowk",                   type:"scam",     date:"2026-08-08", notes:"Organized fake-currency exchange scam targeting tourists.", lat:28.6506, lng:77.2303},
+    {id:14, name:"Vasant Kunj Mall Road",           type:"theft",    date:"2026-08-02", notes:"Vehicle side-mirror theft reported in a parking area.", lat:28.5244, lng:77.1588},
+    {id:15, name:"Sector 56, Gurugram",             type:"theft",    date:"2026-08-06", notes:"Residential break-in reported while owners were away.", lat:28.4181, lng:77.1025},
+    {id:16, name:"Hauz Khas Village",               type:"theft",    date:"2026-08-10", notes:"Wallet theft reported at a cafe.", lat:28.5535, lng:77.1997},
+    {id:17, name:"Sector 15, Gurugram",             type:"violence", date:"2026-08-03", notes:"Armed robbery attempt turned violent near a bank ATM.", lat:28.4735, lng:77.0350},
+    {id:18, name:"Lodhi Road",                      type:"violence", date:"2026-08-07", notes:"Physical altercation between two groups reported late evening.", lat:28.5880, lng:77.2270},
+    {id:19, name:"Udyog Vihar, Gurugram",           type:"violence", date:"2026-08-11", notes:"Workplace-related assault reported near an office complex.", lat:28.5010, lng:77.0870},
+    {id:20, name:"Example: video-linked report (demo)", type:"scam",  date:"2026-08-15", notes:"Demo only â shows how a report backed by a YouTube video looks and links out. Replace the video field with a real safety video when you add your own reports.", lat:28.6100, lng:77.2300, video:"dQw4w9WgXcQ"},
+    {id:21, name:"IGI Airport Terminal 3 â Prepaid Taxi Counter Scam", type:"scam", date:"2026-08-23", notes:"Fake taxi counters set up just inside the arrivals area charge 2-3x the metered fare and may still hand riders off to a street tout; the genuine Delhi Traffic Police prepaid booths are only outside Gates 5 & 6. Source video: youtube.com/shorts/yJ3_oau0z3Y", lat:28.5562, lng:77.1000, video:"yJ3_oau0z3Y"},
+    {id:22, name:"New Delhi Railway Station (Paharganj side) â Fake Tourist Info Centre", type:"scam", date:"2026-08-23", notes:"Touts run unofficial 'Government Tourist Information Centres' just outside the station, telling arrivals the real ticket bureau is closed to divert them to overpriced travel agents. The genuine India Tourism office is just inside the station's main entrance, up the stairs. Source video: youtube.com/watch?v=kRHIthHn-2g", lat:28.6435, lng:77.2140, video:"kRHIthHn-2g"},
+    {id:23, name:"コンノートプレイス â 耳かき屋の詐欺", type:"scam", date:"2026-08-23", notes:"コンノートプレイス周辺で見知らぬ男性が『耳の点検をしてあげる』と声をかけてくる。太陽光で耳の中を覗いた後、薬剤を塗った棒を耳に挿入し、点検料100ルピー、さらに『特別な薬』代として400ルピーを追加請求される。旅行者はその後頭痛と吐き気を訴えた。出典記事: note.com/michitaka64/n/n65b8a5eff0e4", lat:28.6330, lng:77.2175, link:"https://note.com/michitaka64/n/n65b8a5eff0e4"},
+    {id:24, name:"インド門(India Gate) â 偽『観光省』ツアーオフィス", type:"scam", date:"2026-08-23", notes:"インド門付近で人懐っこい現地人が話しかけてきて、無料のオートリキシャ観光ツアーに誘う。その後、ドアに『Ministry of Tourism』と書かれた小さな看板を掲げた非公式の旅行代理店に連れて行かれ、割高な複数日ツアーパッケージの契約を迫られる。出典記事: note.com/mahiro_kobayashi/n/n8e4e651f43c9", lat:28.6129, lng:77.2295, link:"https://note.com/mahiro_kobayashi/n/n8e4e651f43c9"}
+  ];
+
+  var activeFilters = {scam:true, theft:true, violence:true};
+  var markers = {};
+  var nextId = Math.max.apply(null, reports.map(function(r){return r.id;})) + 1;
+  var addMode = false;
+
+  var map = L.map('map', {zoomControl:true}).setView([28.56, 77.15], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Accepts a full YouTube URL (watch?v=, youtu.be/, /embed/, /shorts/) or a
+  // bare 11-character video ID, and returns just the ID (or null).
+  function extractYouTubeId(input){
+    if(!input) return null;
+    input = input.trim();
+    if(/^[\w-]{11}$/.test(input)) return input;
+    var patterns = [
+      /(?:youtube\.com\/watch\?[^#]*\bv=)([\w-]{11})/,
+      /youtu\.be\/([\w-]{11})/,
+      /youtube\.com\/embed\/([\w-]{11})/,
+      /youtube\.com\/shorts\/([\w-]{11})/
+    ];
+    for(var i=0;i<patterns.length;i++){
+      var m = input.match(patterns[i]);
+      if(m) return m[1];
+    }
+    return null;
+  }
+
+  function ytThumbUrl(videoId){
+    // i.ytimg.com is YouTube's actual image CDN (what youtube.com itself
+    // uses for thumbnails). img.youtube.com is just a redirect to it, and
+    // some network filters/ad-blockers block anything under the literal
+    // "youtube.com" hostname while leaving ytimg.com untouched â hitting
+    // the CDN directly avoids that.
+    return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg';
+  }
+  function cameraIconSvg(size){
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="6" width="14" height="12" rx="2"/><path d="M16.5 10.5l5-3v9l-5-3z"/></svg>';
+  }
+  function ytWatchUrl(videoId){
+    return 'https://www.youtube.com/watch?v='+videoId;
+  }
+  function playBadgeSvg(size){
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(0,0,0,0.55)"/><polygon points="10,7.5 17,12 10,16.5" fill="#fff"/></svg>';
+  }
+
+  function typeColor(type){
+    if(type === 'scam') return '#7c3aed';
+    if(type === 'theft') return '#0d9488';
+    return '#4338ca'; // violence
+  }
+
+  // Marker shape AND color both encode type, so the category is legible
+  // even for colorblind viewers.
+  function shapeSvg(type){
+    var color = typeColor(type);
+    if(type === 'scam'){
+      return '<circle cx="8" cy="8" r="6.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>';
+    }
+    if(type === 'theft'){
+      return '<rect x="2" y="2" width="12" height="12" rx="2.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>';
+    }
+    return '<polygon points="8,1.5 15,14.5 1,14.5" fill="'+color+'" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>';
+  }
+
+  function makeIcon(type, videoId){
+    if(videoId){
+      // The marker itself IS the thumbnail and links straight to YouTube on
+      // click; the bound Leaflet popup (with notes/delete) still opens too,
+      // since the two don't conflict â one opens a new tab, one stays here.
+      var html = '<a class="marker-yt-thumb" href="'+ytWatchUrl(videoId)+'" target="_blank" rel="noopener noreferrer" title="Watch on YouTube">'+
+                    '<span class="yt-fallback">'+cameraIconSvg(15)+'</span>'+
+                    '<img src="'+ytThumbUrl(videoId)+'" onerror="this.remove();">'+
+                    '<span class="ring" style="border-color:'+typeColor(type)+';"></span>'+
+                    '<span class="play-dot">'+playBadgeTriangle()+'</span>'+
+                  '</a>';
+      return L.divIcon({
+        className:'',
+        html: html,
+        iconSize:[30,30],
+        iconAnchor:[15,15],
+        popupAnchor:[0,-15]
+      });
+    }
+    var svg = '<svg width="17" height="17" viewBox="-1 -1 18 18" style="overflow:visible;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45));">'+
+              shapeSvg(type)+'</svg>';
+    return L.divIcon({
+      className:'',
+      html: svg,
+      iconSize:[17,17],
+      iconAnchor:[8,9],
+      popupAnchor:[0,-9]
+    });
+  }
+  function playBadgeTriangle(){
+    return '<svg width="8" height="8" viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7" fill="#fff"/></svg>';
+  }
+
+  function videoThumbHtml(r){
+    if(!r.video) return '';
+    return '<a class="yt-thumb" href="'+ytWatchUrl(r.video)+'" target="_blank" rel="noopener noreferrer" title="Watch on YouTube">'+
+             '<span class="yt-fallback">'+cameraIconSvg(26)+'<span>Watch on YouTube</span></span>'+
+             '<img src="'+ytThumbUrl(r.video)+'" alt="YouTube thumbnail for '+escapeHtml(r.name)+'" onerror="this.remove();">'+
+             '<span class="play-badge">'+playBadgeSvg(40)+'</span>'+
+           '</a>';
+  }
+
+  function articleLinkHtml(r){
+    if(!r.link) return '';
+    return '<a class="article-link" href="'+r.link+'" target="_blank" rel="noopener noreferrer">Read source article ↗</a>';
+  }
+
+  function popupHtml(r){
+    return videoThumbHtml(r)+
+           '<span class="tag '+r.type+'">'+r.type+'</span>'+
+           '<div class="popup-name">'+escapeHtml(r.name)+'</div>'+
+           '<div class="popup-date">'+r.date+'</div>'+
+           (r.notes ? '<div class="popup-notes">'+escapeHtml(r.notes)+'</div>' : '')+
+           (r.link ? '<div>'+articleLinkHtml(r)+'</div>' : '')+
+           '<button class="popup-delete" onclick="deleteReport('+r.id+')">Delete report</button>';
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function addMarker(r){
+    var m = L.marker([r.lat, r.lng], {icon: makeIcon(r.type, r.video)}).addTo(map);
+    m.bindPopup(popupHtml(r));
+    markers[r.id] = m;
+  }
+
+  function refreshCounts(){
+    ['scam','theft','violence'].forEach(function(type){
+      var n = reports.filter(function(r){return r.type===type;}).length;
+      document.getElementById('count-type-'+type).textContent = n;
+    });
+  }
+
+  function isVisible(r){
+    return activeFilters[r.type];
+  }
+
+  function refreshVisibility(){
+    reports.forEach(function(r){
+      var m = markers[r.id];
+      if(!m) return;
+      var shouldShow = isVisible(r);
+      var onMap = map.hasLayer(m);
+      if(shouldShow && !onMap) m.addTo(map);
+      if(!shouldShow && onMap) map.removeLayer(m);
+    });
+  }
+
+  function renderList(){
+    var list = document.getElementById('report-list');
+    var visible = reports.filter(isVisible)
+                          .sort(function(a,b){return b.date < a.date ? -1 : 1;});
+    if(visible.length === 0){
+      list.innerHTML = '<div class="empty-state">No reports match the current filters.</div>';
+      return;
+    }
+    list.innerHTML = visible.map(function(r){
+      return '<div class="report-card">'+
+        videoThumbHtml(r)+
+        '<div onclick="focusReport('+r.id+')">'+
+          '<div class="top-row"><span class="tag '+r.type+'">'+r.type+'</span><span class="date">'+r.date+'</span></div>'+
+          '<p class="name">'+escapeHtml(r.name)+'</p>'+
+          (r.notes ? '<p class="notes">'+escapeHtml(r.notes)+'</p>' : '')+
+        '</div>'+
+        articleLinkHtml(r)+
+        '</div>';
+    }).join('');
+  }
+
+  function focusReport(id){
+    var r = reports.find(function(x){return x.id===id;});
+    if(!r) return;
+    map.setView([r.lat, r.lng], 15, {animate:true});
+    var m = markers[id];
+    if(m){ if(!map.hasLayer(m)) m.addTo(map); m.openPopup(); }
+  }
+
+  function toggleFilter(el, val){
+    activeFilters[val] = !activeFilters[val];
+    el.classList.toggle('off', !activeFilters[val]);
+    refreshVisibility();
+    renderList();
+  }
+
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('hidden');
+  }
+
+  // ---- add report flow ----
+  var pendingLatLng = null;
+
+  function startAddReport(){
+    addMode = true;
+    document.getElementById('add-banner').style.display = 'flex';
+    document.getElementById('add-report-btn').style.visibility = 'hidden';
+    map.getContainer().style.cursor = 'crosshair';
+  }
+
+  function cancelAddReport(){
+    addMode = false;
+    document.getElementById('add-banner').style.display = 'none';
+    document.getElementById('add-report-btn').style.visibility = 'visible';
+    map.getContainer().style.cursor = '';
+  }
+
+  map.on('click', function(e){
+    if(!addMode) return;
+    pendingLatLng = e.latlng;
+    cancelAddReport();
+    openModal();
+  });
+
+  function openModal(){
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-type').value = 'theft';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('f-video').value = '';
+    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('modal-overlay').style.display = 'flex';
+  }
+  function closeModal(){
+    document.getElementById('modal-overlay').style.display = 'none';
+    pendingLatLng = null;
+  }
+
+  function submitReport(){
+    var name = document.getElementById('f-name').value.trim();
+    if(!name){ alert('Please enter a title or location for this report.'); return; }
+    if(!pendingLatLng){ alert('Something went wrong locating the pin â please try again.'); closeModal(); return; }
+    var videoInput = document.getElementById('f-video').value.trim();
+    var videoId = extractYouTubeId(videoInput);
+    if(videoInput && !videoId){
+      alert('That doesn\'t look like a valid YouTube link. Leave it blank or paste a full YouTube URL.');
+      return;
+    }
+    var r = {
+      id: nextId++,
+      name: name,
+      type: document.getElementById('f-type').value,
+      date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+      notes: document.getElementById('f-notes').value.trim(),
+      lat: pendingLatLng.lat,
+      lng: pendingLatLng.lng,
+      video: videoId
+    };
+    reports.push(r);
+    addMarker(r);
+    refreshCounts();
+    refreshVisibility();
+    renderList();
+    closeModal();
+  }
+
+  function deleteReport(id){
+    map.closePopup();
+    var m = markers[id];
+    if(m){ map.removeLayer(m); delete markers[id]; }
+    reports = reports.filter(function(r){return r.id !== id;});
+    refreshCounts();
+    renderList();
+  }
+
+  // init
+  reports.forEach(addMarker);
+  refreshCounts();
+  renderList();
+</script>
+</body>
+</html>
