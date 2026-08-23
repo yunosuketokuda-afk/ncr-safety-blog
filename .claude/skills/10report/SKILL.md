@@ -11,7 +11,10 @@ Add 10 new, real, sourced scam/crime reports to the NCR Incident Map (`index.htm
 
 1. **Read the current `reports` array** in `index.html` (inside the `<script>` block near the bottom). Note every existing `name`, `notes`, `link`, and `video` value — this is the dedupe list. Also note the current highest `id`.
 
-2. **Research 10 new incidents** relevant to Delhi, New Delhi, Gurugram, or the wider NCR — scams, theft, or violence against residents/tourists. Use WebSearch/WebFetch. Prefer specific, verifiable sources: news articles, police advisories, established YouTube channels, or blog posts (note.com posts have been used before) that describe a concrete incident at a concrete location. Avoid vague trend pieces with no specific place/date.
+2. **Research 10 new incidents** relevant to Delhi, New Delhi, Gurugram, or the wider NCR — scams, theft, or violence against residents/tourists. Use WebSearch/WebFetch.
+   - **Prioritize Japanese-language articles on note.com** about scams, theft, and violence in Delhi / New Delhi / Gurugram / NCR. Use recent Japanese firsthand reports and travel-safety information first (e.g. search terms like `note.com インド デリー 詐欺`, `note.com インド 旅行 被害`).
+   - If fewer than 10 suitable Japanese articles are available, supplement with reliable English sources (news articles, police advisories, established YouTube channels, other blogs).
+   - In all cases, prefer specific, verifiable sources that describe a concrete incident at a concrete location. Avoid vague trend pieces with no specific place/date.
 
 3. **Deduplicate**: skip any candidate that matches an existing entry's location + incident (same `name`/`notes` substance, or same source URL already present as `link`/`video`). If fewer than 10 unique new incidents turn up, keep searching rather than padding with duplicates or low-quality items.
 
