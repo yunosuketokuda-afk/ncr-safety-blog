@@ -12,7 +12,6 @@
     --border:#e2e4e9;
     --text:#1c1f26;
     --text-muted:#6b7280;
-    --critical:#dc2626;
     --scam:#7c3aed;
     --scam-bg:#f3e8ff;
     --theft:#0d9488;
@@ -169,9 +168,6 @@
   .leaflet-popup-content .popup-name{font-weight:650;margin:2px 0 3px;font-size:13.5px;}
   .leaflet-popup-content .popup-date{color:var(--text-muted);font-size:11.5px;margin-bottom:5px;}
   .leaflet-popup-content .popup-notes{margin-bottom:6px;}
-  .leaflet-popup-content .popup-delete{
-    border:none;background:none;color:var(--critical);font-size:12px;cursor:pointer;padding:0;font-weight:600;
-  }
   .article-link{
     display:inline-block;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;
   }
@@ -218,31 +214,6 @@
     background:#ff0000;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;
   }
 
-  #add-banner{
-    position:absolute;top:10px;left:50%;transform:translateX(-50%);
-    background:var(--accent);color:#fff;padding:8px 16px;border-radius:999px;
-    font-size:13px;font-weight:600;box-shadow:var(--shadow);
-    z-index:1200;display:none;align-items:center;gap:10px;
-  }
-  #add-banner button{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;}
-
-  #modal-overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,0.35);
-    display:none;align-items:center;justify-content:center;z-index:2000;
-  }
-  #modal{
-    background:var(--panel);border-radius:12px;padding:20px;width:320px;
-    box-shadow:var(--shadow);
-  }
-  #modal h3{margin:0 0 12px;font-size:15px;}
-  #modal label{display:block;font-size:12px;color:var(--text-muted);margin:10px 0 4px;}
-  #modal input[type=text], #modal input[type=date], #modal select, #modal textarea{
-    width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;
-    font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;
-  }
-  #modal textarea{resize:vertical;min-height:50px;}
-  #modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
-
   .leaflet-control-attribution{font-size:10.5px;}
   ::-webkit-scrollbar{width:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -270,55 +241,26 @@
     </div>
     <div class="actions-group">
       <button class="btn secondary" onclick="toggleSidebar()">List</button>
-      <button class="btn" id="add-report-btn" onclick="startAddReport()">+ Add Report</button>
     </div>
   </div>
 </header>
 
 <div id="layout">
-  <div id="map">
-    <div id="add-banner">
-      <span>Click anywhere on the map to place the report</span>
-      <button onclick="cancelAddReport()">Cancel</button>
-    </div>
-  </div>
+  <div id="map"></div>
   <div id="sidebar">
     <h2>Reports</h2>
     <div id="report-list"></div>
   </div>
 </div>
 
-<div id="modal-overlay">
-  <div id="modal">
-    <h3>New report</h3>
-    <label>Title / location</label>
-    <input type="text" id="f-name" placeholder="e.g. Cyber Hub Junction">
-    <label>Type</label>
-    <select id="f-type">
-      <option value="scam">Scam</option>
-      <option value="theft" selected>Theft</option>
-      <option value="violence">Violence</option>
-    </select>
-    <label>Date</label>
-    <input type="date" id="f-date">
-    <label>Notes</label>
-    <textarea id="f-notes" placeholder="Optional details"></textarea>
-    <label>YouTube video <span style="font-weight:400;">(optional)</span></label>
-    <input type="text" id="f-video" placeholder="Paste a YouTube link, e.g. youtube.com/watch?v=...">
-    <div class="modal-actions">
-      <button class="btn secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn" onclick="submitReport()">Save report</button>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-  // ---- seed data (example placeholder reports â replace with real submissions) ----
+  // ---- report data ----
+  // The map is read-only for visitors: this array is the single source of
+  // truth. To add/update/remove a report, edit this array directly (via
+  // Claude Code), then commit and push â there is no live-editing UI.
   // Each report is classified by a single axis: type (Scam/Theft/Violence).
-  var seedReports = [
+  var reports = [
     {id:1,  name:"Cyber Hub, Gurugram",            type:"scam",     date:"2026-03-14", notes:"Fake ride-share/QR payment scam targeting visitors near the hub entrance.", lat:28.4950, lng:77.0910},
     {id:2,  name:"Karol Bagh Market",               type:"scam",     date:"2026-04-02", notes:"Fake discount electronics stall collecting advance payments then vanishing.", lat:28.6517, lng:77.1900},
     {id:3,  name:"Sarojini Nagar Market",           type:"theft",    date:"2026-04-20", notes:"Pickpocketing reported during peak weekend shopping hours.", lat:28.5735, lng:77.1998},
@@ -375,65 +317,14 @@
     {id:54, name:"Sector 34, Noida", type:"scam", date:"2026-07-03", notes:"A resident opened a file disguised as an RTO traffic-challan notice, which harvested banking credentials and silently rerouted their phone calls so bank fraud alerts wouldn't get through; attackers raised the transaction limit and drained roughly Rs 14.55 lakh via three RTGS transfers within hours. Source: news4hackers.com", lat:28.5802, lng:77.3634, link:"https://www.news4hackers.com/noida-trio-scammed-%E2%82%B929-06-lakh-via-apk-fraud-and-telegram-task-scams"}
   ];
 
-  // ---- Firestore backend ----
-  // Fill these in from Firebase console → Project settings → General →
-  // Your apps → Web app → SDK setup and configuration → Config.
-  // Until a real apiKey is set, the map falls back to local-only mode:
-  // seedReports render normally, but Add/Delete only affect this browser
-  // tab and are lost on reload.
-  var firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
-  var db = null;
-  var reportsCollection = null;
-  var firebaseReady = false;
-  try {
-    if (typeof firebase !== 'undefined' && firebaseConfig.apiKey.indexOf('YOUR_') !== 0) {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      reportsCollection = db.collection('reports');
-      firebaseReady = true;
-    }
-  } catch (e) {
-    console.warn('Firebase init failed, falling back to local-only reports.', e);
-  }
-
-  var reports = [];
   var activeFilters = {scam:true, theft:true, violence:true};
   var markers = {};
-  var nextId = Math.max.apply(null, seedReports.map(function(r){return r.id;})) + 1;
-  var addMode = false;
 
   var map = L.map('map', {zoomControl:true}).setView([28.56, 77.15], 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-
-  // Accepts a full YouTube URL (watch?v=, youtu.be/, /embed/, /shorts/) or a
-  // bare 11-character video ID, and returns just the ID (or null).
-  function extractYouTubeId(input){
-    if(!input) return null;
-    input = input.trim();
-    if(/^[\w-]{11}$/.test(input)) return input;
-    var patterns = [
-      /(?:youtube\.com\/watch\?[^#]*\bv=)([\w-]{11})/,
-      /youtu\.be\/([\w-]{11})/,
-      /youtube\.com\/embed\/([\w-]{11})/,
-      /youtube\.com\/shorts\/([\w-]{11})/
-    ];
-    for(var i=0;i<patterns.length;i++){
-      var m = input.match(patterns[i]);
-      if(m) return m[1];
-    }
-    return null;
-  }
 
   function ytThumbUrl(videoId){
     // i.ytimg.com is YouTube's actual image CDN (what youtube.com itself
@@ -475,8 +366,8 @@
   function makeIcon(type, videoId){
     if(videoId){
       // The marker itself IS the thumbnail and links straight to YouTube on
-      // click; the bound Leaflet popup (with notes/delete) still opens too,
-      // since the two don't conflict â one opens a new tab, one stays here.
+      // click; the bound Leaflet popup (with notes) still opens too, since
+      // the two don't conflict â one opens a new tab, one stays here.
       var html = '<a class="marker-yt-thumb" href="'+ytWatchUrl(videoId)+'" target="_blank" rel="noopener noreferrer" title="Watch on YouTube">'+
                     '<span class="yt-fallback">'+cameraIconSvg(15)+'</span>'+
                     '<img src="'+ytThumbUrl(videoId)+'" onerror="this.remove();">'+
@@ -525,8 +416,7 @@
            '<div class="popup-name">'+escapeHtml(r.name)+'</div>'+
            '<div class="popup-date">'+r.date+'</div>'+
            (r.notes ? '<div class="popup-notes">'+escapeHtml(r.notes)+'</div>' : '')+
-           (r.link ? '<div>'+articleLinkHtml(r)+'</div>' : '')+
-           '<button class="popup-delete" onclick="deleteReport(\''+r.id+'\')">Delete report</button>';
+           (r.link ? '<div>'+articleLinkHtml(r)+'</div>' : '');
   }
 
   function escapeHtml(s){
@@ -574,7 +464,7 @@
     list.innerHTML = visible.map(function(r){
       return '<div class="report-card">'+
         videoThumbHtml(r)+
-        '<div onclick="focusReport(\''+r.id+'\')">'+
+        '<div onclick="focusReport('+r.id+')">'+
           '<div class="top-row"><span class="tag '+r.type+'">'+r.type+'</span><span class="date">'+r.date+'</span></div>'+
           '<p class="name">'+escapeHtml(r.name)+'</p>'+
           (r.notes ? '<p class="notes">'+escapeHtml(r.notes)+'</p>' : '')+
@@ -603,153 +493,10 @@
     document.getElementById('sidebar').classList.toggle('hidden');
   }
 
-  // ---- add report flow ----
-  var pendingLatLng = null;
-
-  function startAddReport(){
-    addMode = true;
-    document.getElementById('add-banner').style.display = 'flex';
-    document.getElementById('add-report-btn').style.visibility = 'hidden';
-    map.getContainer().style.cursor = 'crosshair';
-  }
-
-  function cancelAddReport(){
-    addMode = false;
-    document.getElementById('add-banner').style.display = 'none';
-    document.getElementById('add-report-btn').style.visibility = 'visible';
-    map.getContainer().style.cursor = '';
-  }
-
-  map.on('click', function(e){
-    if(!addMode) return;
-    pendingLatLng = e.latlng;
-    cancelAddReport();
-    openModal();
-  });
-
-  function openModal(){
-    document.getElementById('f-name').value = '';
-    document.getElementById('f-type').value = 'theft';
-    document.getElementById('f-notes').value = '';
-    document.getElementById('f-video').value = '';
-    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
-    document.getElementById('modal-overlay').style.display = 'flex';
-  }
-  function closeModal(){
-    document.getElementById('modal-overlay').style.display = 'none';
-    pendingLatLng = null;
-  }
-
-  function submitReport(){
-    var name = document.getElementById('f-name').value.trim();
-    if(!name){ alert('Please enter a title or location for this report.'); return; }
-    if(!pendingLatLng){ alert('Something went wrong locating the pin â please try again.'); closeModal(); return; }
-    var videoInput = document.getElementById('f-video').value.trim();
-    var videoId = extractYouTubeId(videoInput);
-    if(videoInput && !videoId){
-      alert('That doesn\'t look like a valid YouTube link. Leave it blank or paste a full YouTube URL.');
-      return;
-    }
-    var r = {
-      name: name,
-      type: document.getElementById('f-type').value,
-      date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
-      notes: document.getElementById('f-notes').value.trim(),
-      lat: pendingLatLng.lat,
-      lng: pendingLatLng.lng,
-      video: videoId
-    };
-
-    if(!firebaseReady){
-      r.id = String(nextId++);
-      reports.push(r);
-      addMarker(r);
-      refreshCounts();
-      refreshVisibility();
-      renderList();
-      closeModal();
-      return;
-    }
-
-    reportsCollection.add(r).then(function(){
-      closeModal(); // onSnapshot below re-renders once the write lands
-    }).catch(function(e){
-      alert('Could not save report â check your connection and try again.');
-      console.error(e);
-    });
-  }
-
-  var DELETE_PASSWORD = 'gjc';
-
-  function deleteReport(id){
-    var pass = prompt('Enter password to delete this report:');
-    if(pass === null) return;
-    if(pass !== DELETE_PASSWORD){ alert('Incorrect password.'); return; }
-
-    map.closePopup();
-
-    if(!firebaseReady){
-      var m = markers[id];
-      if(m){ map.removeLayer(m); delete markers[id]; }
-      reports = reports.filter(function(x){return x.id !== id;});
-      refreshCounts();
-      renderList();
-      return;
-    }
-
-    reportsCollection.doc(id).delete().catch(function(e){
-      alert('Could not delete report â check your connection and try again.');
-      console.error(e);
-    });
-  }
-
-  // ---- init: load from Firestore (seeding it from seedReports the first
-  // time it's empty), or fall back to local-only seedReports ----
-  function renderAll(){
-    Object.keys(markers).forEach(function(id){ map.removeLayer(markers[id]); });
-    markers = {};
-    reports.forEach(addMarker);
-    refreshCounts();
-    refreshVisibility();
-    renderList();
-  }
-
-  function startLocalOnly(){
-    reports = seedReports.map(function(r){
-      return Object.assign({}, r, {id: String(r.id)});
-    });
-    renderAll();
-  }
-
-  if(!firebaseReady){
-    startLocalOnly();
-  } else {
-    reportsCollection.limit(1).get().then(function(snap){
-      if(!snap.empty) return;
-      var batch = db.batch();
-      seedReports.forEach(function(r){
-        var data = Object.assign({}, r);
-        delete data.id;
-        batch.set(reportsCollection.doc(), data);
-      });
-      return batch.commit();
-    }).then(function(){
-      reportsCollection.onSnapshot(function(snapshot){
-        reports = snapshot.docs.map(function(doc){
-          var data = doc.data();
-          data.id = doc.id;
-          return data;
-        });
-        renderAll();
-      }, function(e){
-        console.error('Firestore listen error, falling back to local-only reports.', e);
-        startLocalOnly();
-      });
-    }).catch(function(e){
-      console.error('Firestore init error, falling back to local-only reports.', e);
-      startLocalOnly();
-    });
-  }
+  // init
+  reports.forEach(addMarker);
+  refreshCounts();
+  renderList();
 </script>
 </body>
 </html>
