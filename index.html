@@ -313,11 +313,13 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
   // ---- seed data (example placeholder reports â replace with real submissions) ----
   // Each report is classified by a single axis: type (Scam/Theft/Violence).
-  var reports = [
-    {id:1,  name:"Cyber Hub, Gurugram",             type:"scam",     date:"2026-03-14", notes:"Fake ride-share/QR payment scam targeting visitors near the hub entrance.", lat:28.4950, lng:77.0910},
+  var seedReports = [
+    {id:1,  name:"Cyber Hub, Gurugram",            type:"scam",     date:"2026-03-14", notes:"Fake ride-share/QR payment scam targeting visitors near the hub entrance.", lat:28.4950, lng:77.0910},
     {id:2,  name:"Karol Bagh Market",               type:"scam",     date:"2026-04-02", notes:"Fake discount electronics stall collecting advance payments then vanishing.", lat:28.6517, lng:77.1900},
     {id:3,  name:"Sarojini Nagar Market",           type:"theft",    date:"2026-04-20", notes:"Pickpocketing reported during peak weekend shopping hours.", lat:28.5735, lng:77.1998},
     {id:4,  name:"Connaught Place, Inner Circle",   type:"theft",    date:"2026-05-18", notes:"Phone snatching from an outdoor cafe table.", lat:28.6315, lng:77.2167},
@@ -373,9 +375,39 @@
     {id:54, name:"Sector 34, Noida", type:"scam", date:"2026-07-03", notes:"A resident opened a file disguised as an RTO traffic-challan notice, which harvested banking credentials and silently rerouted their phone calls so bank fraud alerts wouldn't get through; attackers raised the transaction limit and drained roughly Rs 14.55 lakh via three RTGS transfers within hours. Source: news4hackers.com", lat:28.5802, lng:77.3634, link:"https://www.news4hackers.com/noida-trio-scammed-%E2%82%B929-06-lakh-via-apk-fraud-and-telegram-task-scams"}
   ];
 
+  // ---- Firestore backend ----
+  // Fill these in from Firebase console → Project settings → General →
+  // Your apps → Web app → SDK setup and configuration → Config.
+  // Until a real apiKey is set, the map falls back to local-only mode:
+  // seedReports render normally, but Add/Delete only affect this browser
+  // tab and are lost on reload.
+  var firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  var db = null;
+  var reportsCollection = null;
+  var firebaseReady = false;
+  try {
+    if (typeof firebase !== 'undefined' && firebaseConfig.apiKey.indexOf('YOUR_') !== 0) {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      reportsCollection = db.collection('reports');
+      firebaseReady = true;
+    }
+  } catch (e) {
+    console.warn('Firebase init failed, falling back to local-only reports.', e);
+  }
+
+  var reports = [];
   var activeFilters = {scam:true, theft:true, violence:true};
   var markers = {};
-  var nextId = Math.max.apply(null, reports.map(function(r){return r.id;})) + 1;
+  var nextId = Math.max.apply(null, seedReports.map(function(r){return r.id;})) + 1;
   var addMode = false;
 
   var map = L.map('map', {zoomControl:true}).setView([28.56, 77.15], 11);
@@ -494,7 +526,7 @@
            '<div class="popup-date">'+r.date+'</div>'+
            (r.notes ? '<div class="popup-notes">'+escapeHtml(r.notes)+'</div>' : '')+
            (r.link ? '<div>'+articleLinkHtml(r)+'</div>' : '')+
-           '<button class="popup-delete" onclick="deleteReport('+r.id+')">Delete report</button>';
+           '<button class="popup-delete" onclick="deleteReport(\''+r.id+'\')">Delete report</button>';
   }
 
   function escapeHtml(s){
@@ -542,7 +574,7 @@
     list.innerHTML = visible.map(function(r){
       return '<div class="report-card">'+
         videoThumbHtml(r)+
-        '<div onclick="focusReport('+r.id+')">'+
+        '<div onclick="focusReport(\''+r.id+'\')">'+
           '<div class="top-row"><span class="tag '+r.type+'">'+r.type+'</span><span class="date">'+r.date+'</span></div>'+
           '<p class="name">'+escapeHtml(r.name)+'</p>'+
           (r.notes ? '<p class="notes">'+escapeHtml(r.notes)+'</p>' : '')+
@@ -619,7 +651,6 @@
       return;
     }
     var r = {
-      id: nextId++,
       name: name,
       type: document.getElementById('f-type').value,
       date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
@@ -628,12 +659,24 @@
       lng: pendingLatLng.lng,
       video: videoId
     };
-    reports.push(r);
-    addMarker(r);
-    refreshCounts();
-    refreshVisibility();
-    renderList();
-    closeModal();
+
+    if(!firebaseReady){
+      r.id = String(nextId++);
+      reports.push(r);
+      addMarker(r);
+      refreshCounts();
+      refreshVisibility();
+      renderList();
+      closeModal();
+      return;
+    }
+
+    reportsCollection.add(r).then(function(){
+      closeModal(); // onSnapshot below re-renders once the write lands
+    }).catch(function(e){
+      alert('Could not save report â check your connection and try again.');
+      console.error(e);
+    });
   }
 
   var DELETE_PASSWORD = 'gjc';
@@ -644,17 +687,69 @@
     if(pass !== DELETE_PASSWORD){ alert('Incorrect password.'); return; }
 
     map.closePopup();
-    var m = markers[id];
-    if(m){ map.removeLayer(m); delete markers[id]; }
-    reports = reports.filter(function(x){return x.id !== id;});
+
+    if(!firebaseReady){
+      var m = markers[id];
+      if(m){ map.removeLayer(m); delete markers[id]; }
+      reports = reports.filter(function(x){return x.id !== id;});
+      refreshCounts();
+      renderList();
+      return;
+    }
+
+    reportsCollection.doc(id).delete().catch(function(e){
+      alert('Could not delete report â check your connection and try again.');
+      console.error(e);
+    });
+  }
+
+  // ---- init: load from Firestore (seeding it from seedReports the first
+  // time it's empty), or fall back to local-only seedReports ----
+  function renderAll(){
+    Object.keys(markers).forEach(function(id){ map.removeLayer(markers[id]); });
+    markers = {};
+    reports.forEach(addMarker);
     refreshCounts();
+    refreshVisibility();
     renderList();
   }
 
-  // init
-  reports.forEach(addMarker);
-  refreshCounts();
-  renderList();
+  function startLocalOnly(){
+    reports = seedReports.map(function(r){
+      return Object.assign({}, r, {id: String(r.id)});
+    });
+    renderAll();
+  }
+
+  if(!firebaseReady){
+    startLocalOnly();
+  } else {
+    reportsCollection.limit(1).get().then(function(snap){
+      if(!snap.empty) return;
+      var batch = db.batch();
+      seedReports.forEach(function(r){
+        var data = Object.assign({}, r);
+        delete data.id;
+        batch.set(reportsCollection.doc(), data);
+      });
+      return batch.commit();
+    }).then(function(){
+      reportsCollection.onSnapshot(function(snapshot){
+        reports = snapshot.docs.map(function(doc){
+          var data = doc.data();
+          data.id = doc.id;
+          return data;
+        });
+        renderAll();
+      }, function(e){
+        console.error('Firestore listen error, falling back to local-only reports.', e);
+        startLocalOnly();
+      });
+    }).catch(function(e){
+      console.error('Firestore init error, falling back to local-only reports.', e);
+      startLocalOnly();
+    });
+  }
 </script>
 </body>
 </html>
