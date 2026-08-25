@@ -11,7 +11,7 @@ The map is read-only for site visitors: `index.html`'s `reports` array is the si
 
 ## Report policy: Japanese-language only
 
-**Every new report added by this skill must come from a Japanese-language source and be written in Japanese** (`name` and `notes` fields), matching the style of the existing Japanese entries already in the file (e.g. ids 23–26, 35–37). This is a hard requirement, not a preference — do not fall back to English-language sources or English-language entries.
+**Every new report added by this skill must come from a Japanese-language source and be written in Japanese** (`name` and `notes` fields) — every existing entry in `index.html` is already Japanese-language, and new ones must match that style. This is a hard requirement, not a preference — do not fall back to English-language sources or English-language entries.
 
 ## Steps
 
@@ -47,7 +47,7 @@ The map is read-only for site visitors: `index.html`'s `reports` array is the si
 ## Constraints (hard rules)
 
 - Every new report must be sourced from Japanese-language material and written in Japanese (`name`/`notes`). No English-sourced or English-written entries.
-- Never delete or modify an existing report object (including the pre-existing English-language ones — they stay as historical data, just don't add more like them).
+- Never delete or modify an existing report object.
 - Never fabricate a report — every entry needs a real, checkable source URL.
 - Never commit or push. This skill only edits the working file.
 - Never add any visitor-facing add/delete/edit functionality back into `index.html` — the map is permanently read-only for visitors; only this skill (via Claude Code, at the user's request) modifies report data.
