@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NCR Field Notes</title>
+<meta name="description" content="デリー・グルガオン駐在/渡航予定の日本人向けに、SNSやnoteで報告された詐欺・盗難・暴力の実体験談をエリア別・手口別に地図でまとめたサイトです。">
+<meta property="og:title" content="NCR Field Notes — デリー・グルガオン 詐欺被害マップ">
+<meta property="og:description" content="デリー・グルガオンで実際に報告された詐欺・盗難・暴力の体験談を地図で確認できます。">
+<meta property="og:url" content="https://yunosuketokuda-afk.github.io/ncr-safety-blog/">
+<meta property="og:type" content="website">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <style>
   :root{
@@ -181,7 +186,7 @@
   .leaflet-popup-content .article-link{margin-bottom:6px;}
   .report-card .article-link{margin:2px 12px 2px;}
 
-  /* YouTube thumbnail link â used in popups, list cards, and marker icons.
+  /* YouTube thumbnail link — used in popups, list cards, and marker icons.
      Clicking it opens the video directly on youtube.com in a new tab.
      .yt-fallback sits underneath the <img> at all times; if the image
      loads, it visually covers the fallback completely, if it 404s/blocks,
@@ -239,13 +244,13 @@
     <div class="chip-group" id="type-group">
       <span class="group-label">Type</span>
       <div class="chip scam" data-val="scam" onclick="toggleFilter(this,'scam')">
-        <span class="shape">â</span><span id="count-type-scam">0</span> Scam
+        <span class="shape">●</span><span id="count-type-scam">0</span> Scam
       </div>
       <div class="chip theft" data-val="theft" onclick="toggleFilter(this,'theft')">
-        <span class="shape">â </span><span id="count-type-theft">0</span> Theft
+        <span class="shape">■</span><span id="count-type-theft">0</span> Theft
       </div>
       <div class="chip violence" data-val="violence" onclick="toggleFilter(this,'violence')">
-        <span class="shape">â²</span><span id="count-type-violence">0</span> Violence
+        <span class="shape">▲</span><span id="count-type-violence">0</span> Violence
       </div>
     </div>
     <div class="chip-group" id="area-group">
@@ -276,26 +281,26 @@
   // ---- report data ----
   // The map is read-only for visitors: this array is the single source of
   // truth. To add/update/remove a report, edit this array directly (via
-  // Claude Code), then commit and push â there is no live-editing UI.
+  // Claude Code), then commit and push — there is no live-editing UI.
   // Each report is classified by a single axis: type (Scam/Theft/Violence).
   var reports = [
-    {id:1, name:"コンノートプレイス â 耳かき屋の詐欺", type:"scam", date:"2026-08-23", notes:"コンノートプレイス周辺で見知らぬ男性が『耳の点検をしてあげる』と声をかけてくる。太陽光で耳の中を覗いた後、薬剤を塗った棒を耳に挿入し、点検料100ルピー、さらに『特別な薬』代として400ルピーを追加請求される。旅行者はその後頭痛と吐き気を訴えた。出典記事: note.com/michitaka64/n/n65b8a5eff0e4", lat:28.6330, lng:77.2175, link:"https://note.com/michitaka64/n/n65b8a5eff0e4"},
-    {id:2, name:"インド門(India Gate) â 偽『観光省』ツアーオフィス", type:"scam", date:"2026-08-23", notes:"インド門付近で人懐っこい現地人が話しかけてきて、無料のオートリキシャ観光ツアーに誘う。その後、ドアに『Ministry of Tourism』と書かれた小さな看板を掲げた非公式の旅行代理店に連れて行かれ、割高な複数日ツアーパッケージの契約を迫られる。出典記事: note.com/mahiro_kobayashi/n/n8e4e651f43c9", lat:28.6129, lng:77.2295, link:"https://note.com/mahiro_kobayashi/n/n8e4e651f43c9"},
-    {id:3, name:"ニューデリー駅周辺 â DTTDC恐喝事件", type:"violence", date:"2022-10-01", notes:"リキシャ運転手に『ディワリで道が通行止め』と嘘をつかれ、偽の政府観光公社DTTDCへ誘導される。断ってUberを呼んだところ、男に車を停車させられ脅されて2000ルピーを奪われた。出典記事: note.com/bbskktn/n/nf88d15a8dd06", lat:28.6435, lng:77.2140, link:"https://note.com/bbskktn/n/nf88d15a8dd06"},
-    {id:4, name:"コンノートプレイス Gブロック â 偽観光案内所の詐欺", type:"scam", date:"2024-12-01", notes:"オートリキシャの運転手に誘導され、Gブロック23番地の『観光案内所』を名乗る施設へ。モンスーンで鉄道が遅延しタージマハルを見られなくなると不安を煽られ、アグラ行きの車チャーター(約3万円)を契約させられそうになった。出典記事: note.com/jomginjalan77/n/n5cb7caca24ff", lat:28.6328, lng:77.2192, link:"https://note.com/jomginjalan77/n/n5cb7caca24ff"},
-    {id:5, name:"コンノートプレイス â 偽政府職員の詐欺", type:"scam", date:"2023-06-28", notes:"『政府職員』を名乗る男に声をかけられ、行方不明の学生に関する偽のニュース記事まで見せて不安を煽られた末、偽の許可証を掲げる旅行代理店へ連れて行かれ、3万7450ルピー(約6万円)の高額ツアーを契約させられた。後に警察介入をちらつかせてキャンセルに成功。出典記事: note.com/kosakamen/n/n7d2a1a449d89", lat:28.6320, lng:77.2183, link:"https://note.com/kosakamen/n/n7d2a1a449d89"},
-    {id:6, name:"IGIエアポート ターミナル3-2間 â 偽タクシー誘導", type:"scam", date:"2025-01-21", notes:"空港内で道に迷っていたところ親切を装う男に声をかけられ、強引にタクシーに乗せられる。徒歩10分の距離にもかかわらず空港敷地内を15分ほど周回させられた末にターミナル2へ到着し、2000ルピーを請求された。出典記事: note.com/takuma_outdoor/n/n516986404418", lat:28.5545, lng:77.0985, link:"https://note.com/takuma_outdoor/n/n516986404418"},
-    {id:7, name:"IGIエアポート â Uber二重請求詐欺", type:"scam", date:"2025-07-16", notes:"空港のUber乗り場で運転手がアプリ上の4桁認証コードを入力せず配車を開始。目的地到着後、クレジットカード決済を選択していたにもかかわらず『現金のみ』と言われ、アプリのカード請求と現金の二重請求をされそうになった。出典記事: note.com/journey_fore/n/n2a3b1c0e94e2", lat:28.5560, lng:77.1010, link:"https://note.com/journey_fore/n/n2a3b1c0e94e2"},
-    {id:8, name:"MGFメガモール（グルガオン セクター27周辺）â 偽装マッサージ店", type:"scam", date:"2025-03-29", notes:"家族向けショッピングモール内で『2000ルピーのマッサージ』を謳うスパに、日本人YouTuberが日本語ブログで見た噂を確かめるため潜入。店内では『会員になってから女性を選べる』と説明され、通常のマッサージ店を装いながら実態は性的サービスを暗に持ちかける店だったことが判明した。出典動画: youtube.com/watch?v=IMZtBjHDQkc", lat:28.4796, lng:77.0800, video:"IMZtBjHDQkc"},
-    {id:9, name:"セクター29 ナイトスポット街（グルガオン）â 物乞い児童に囲まれる", type:"violence", date:"2024-08-20", notes:"Leisure Valley Road周辺のバー街を訪れた日本人YouTuber一行が、風船売りを装う物乞いの子供たちに執拗に取り囲まれて体を触られ、『危ない』と感じてその場から逃走した。子供たちは大人に働かされ、稼いだ金は大人に搾取されている実態も語られている。出典動画: youtube.com/watch?v=_gYgACmGM8A", lat:28.4593, lng:77.0724, video:"_gYgACmGM8A"},
-    {id:10, name:"ニューデリー駅周辺 â 偽ツアー窓口の詐欺", type:"scam", date:"2025-02-06", notes:"『日本語が話せるインド人』が観光案内窓口で近づき、『選挙と繁忙期で電車のチケットが取れない』と嘘をついて高額なツアーパッケージを契約させた。1万6000ルピーを請求されたが、後に警察へ通報すると詰め寄って交渉し、1万ルピーを取り返した。出典記事: note.com/_hisahiro57_/n/n95fa33c821b7", lat:28.6435, lng:77.2140, link:"https://note.com/_hisahiro57_/n/n95fa33c821b7"},
-    {id:11, name:"チャンドニーチョーク â 物乞いに腕をつかまれる", type:"violence", date:"2026-01-19", notes:"混雑した市場で物乞いの男に服をつかまれ『10ルピーくれ』と迫られ、振り切るのに力が必要だった。別の場面では子供が腕を強く引っ張って金をせがみ、周囲ではスリのグループが手のジェスチャーで獲物の位置を仲間に伝えているのも目撃された。出典記事: note.com/oru__spice/n/n92e256ca57ad", lat:28.6506, lng:77.2303, link:"https://note.com/oru__spice/n/n92e256ca57ad"},
-    {id:12, name:"ニューデリー駅周辺 â 『ホテル周辺は危険』詐欺", type:"scam", date:"2024-05-12", notes:"見知らぬ現地人が行き先のホテルを尋ね、『そのエリアは危険地帯だからやめとけ、案内してあげる』と声をかけてきた。自然に近づいてきて話しかけてくるインド人は詐欺師と思った方がいいという典型的な手口で、振り切って難を逃れた。出典動画: youtube.com/watch?v=99fI-p2-G-I", lat:28.6270, lng:77.2192, video:"99fI-p2-G-I"},
-    {id:13, name:"ニューデリー駅 â 組織的トゥクトゥク詐欺網", type:"violence", date:"2025-07-07", notes:"駅の跨線橋を徒歩で渡ろうとしたところ係員に『チケットがないと渡れない、政府指定のオートリキシャで迂回しろ』と言われ、その後の検問でも『宿泊エリアは封鎖中』と嘘をつかれ偽の旅行代理店へ連れて行かれた。断って解放された後、運転手が豹変し40ドルを要求してきたため、有り金の100ルピーだけ渡して逃げた。出典動画: youtube.com/watch?v=cl4IOCXPtEU", lat:28.6440, lng:77.2135, video:"cl4IOCXPtEU"},
-    {id:14, name:"大使館エリア付近 â タクシー運転手のコミッション詐欺", type:"scam", date:"2024-01-02", notes:"地元向けのサリーを買いたいと目的地を伝えたタクシー運転手に、スラム街の入口や全く別の高級サリー専門店へ繰り返し降ろされた。地元の店は『ぼったくられるから危険』と嘘をつかれ、運転手が委託手数料を得られる高級店へ誘導されたとみられる。出典動画: youtube.com/watch?v=boi2Bdpe1Z4", lat:28.5921, lng:77.1900, video:"boi2Bdpe1Z4"},
-    {id:15, name:"ニューデリー駅 â 偽旅行代理店(危険区域)詐欺", type:"violence", date:"2022-12-22", notes:"駅の跨線橋で『この先は危険だから』と親切を装う男に偽の旅行代理店へ案内される。薬物使用者らしき人物や体格の良い男たちがいる人気の少ない場所で、スマホで調べようとすると運転手に強く制止された。店内で偽の電話でホテル予約をキャンセルされ、架空の1週間ツアーを組まされそうになったが詐欺だと確信し抜け出した。出典動画: youtube.com/watch?v=NcqX_0Am1ic", lat:28.6430, lng:77.2145, video:"NcqX_0Am1ic"},
-    {id:16, name:"IGIエアポート付近 â Uber車内に置き忘れた携帯電話", type:"theft", date:"2023-03-10", notes:"空港へ向かうUberタクシーの中で寝てしまい携帯電話を置き忘れて下車。運転手はそのまま走り去り電話にも出ず、位置情報を頼りに追跡するも4時間以上見つからなかった。周囲の人々の助けと警察の捜索でようやく発見され、警察署で無事受け取ることができた。出典動画: youtube.com/watch?v=cib17b75yY0", lat:28.5562, lng:77.1000, video:"cib17b75yY0"},
-    {id:17, name:"GB通り(オールドデリー) â 薬物使用者につきまとわれる", type:"violence", date:"2025-12-31", notes:"人身売買の問題で知られるGB通り周辺を歩いていたところ、薬物を使用している様子の男に30分以上つきまとわれた。危害は加えられなかったが恐怖で涙が出るほどで、Uberを呼んでその場を離れた。出典動画: youtube.com/watch?v=MHcncZx1nBU", lat:28.6475, lng:77.2228, video:"MHcncZx1nBU"}
+    {id:1, name:"コンノートプレイス — 耳かき屋の詐欺", type:"scam", date:"2026-08-23", notes:"コンノートプレイス周辺で見知らぬ男性が『耳の点検をしてあげる』と声をかけてくる。太陽光で耳の中を覗いた後、薬剤を塗った棒を耳に挿入し、点検料100ルピー、さらに『特別な薬』代として400ルピーを追加請求される。旅行者はその後頭痛と吐き気を訴えた。出典記事: note.com/michitaka64/n/n65b8a5eff0e4", lat:28.6330, lng:77.2175, link:"https://note.com/michitaka64/n/n65b8a5eff0e4"},
+    {id:2, name:"インド門(India Gate) — 偽『観光省』ツアーオフィス", type:"scam", date:"2026-08-23", notes:"インド門付近で人懐っこい現地人が話しかけてきて、無料のオートリキシャ観光ツアーに誘う。その後、ドアに『Ministry of Tourism』と書かれた小さな看板を掲げた非公式の旅行代理店に連れて行かれ、割高な複数日ツアーパッケージの契約を迫られる。出典記事: note.com/mahiro_kobayashi/n/n8e4e651f43c9", lat:28.6129, lng:77.2295, link:"https://note.com/mahiro_kobayashi/n/n8e4e651f43c9"},
+    {id:3, name:"ニューデリー駅周辺 — DTTDC恐喝事件", type:"violence", date:"2022-10-01", notes:"リキシャ運転手に『ディワリで道が通行止め』と嘘をつかれ、偽の政府観光公社DTTDCへ誘導される。断ってUberを呼んだところ、男に車を停車させられ脅されて2000ルピーを奪われた。出典記事: note.com/bbskktn/n/nf88d15a8dd06", lat:28.6435, lng:77.2140, link:"https://note.com/bbskktn/n/nf88d15a8dd06"},
+    {id:4, name:"コンノートプレイス Gブロック — 偽観光案内所の詐欺", type:"scam", date:"2024-12-01", notes:"オートリキシャの運転手に誘導され、Gブロック23番地の『観光案内所』を名乗る施設へ。モンスーンで鉄道が遅延しタージマハルを見られなくなると不安を煽られ、アグラ行きの車チャーター(約3万円)を契約させられそうになった。出典記事: note.com/jomginjalan77/n/n5cb7caca24ff", lat:28.6328, lng:77.2192, link:"https://note.com/jomginjalan77/n/n5cb7caca24ff"},
+    {id:5, name:"コンノートプレイス — 偽政府職員の詐欺", type:"scam", date:"2023-06-28", notes:"『政府職員』を名乗る男に声をかけられ、行方不明の学生に関する偽のニュース記事まで見せて不安を煽られた末、偽の許可証を掲げる旅行代理店へ連れて行かれ、3万7450ルピー(約6万円)の高額ツアーを契約させられた。後に警察介入をちらつかせてキャンセルに成功。出典記事: note.com/kosakamen/n/n7d2a1a449d89", lat:28.6320, lng:77.2183, link:"https://note.com/kosakamen/n/n7d2a1a449d89"},
+    {id:6, name:"IGIエアポート ターミナル3-2間 — 偽タクシー誘導", type:"scam", date:"2025-01-21", notes:"空港内で道に迷っていたところ親切を装う男に声をかけられ、強引にタクシーに乗せられる。徒歩10分の距離にもかかわらず空港敷地内を15分ほど周回させられた末にターミナル2へ到着し、2000ルピーを請求された。出典記事: note.com/takuma_outdoor/n/n516986404418", lat:28.5545, lng:77.0985, link:"https://note.com/takuma_outdoor/n/n516986404418"},
+    {id:7, name:"IGIエアポート — Uber二重請求詐欺", type:"scam", date:"2025-07-16", notes:"空港のUber乗り場で運転手がアプリ上の4桁認証コードを入力せず配車を開始。目的地到着後、クレジットカード決済を選択していたにもかかわらず『現金のみ』と言われ、アプリのカード請求と現金の二重請求をされそうになった。出典記事: note.com/journey_fore/n/n2a3b1c0e94e2", lat:28.5560, lng:77.1010, link:"https://note.com/journey_fore/n/n2a3b1c0e94e2"},
+    {id:8, name:"MGFメガモール（グルガオン セクター27周辺）— 偽装マッサージ店", type:"scam", date:"2025-03-29", notes:"家族向けショッピングモール内で『2000ルピーのマッサージ』を謳うスパに、日本人YouTuberが日本語ブログで見た噂を確かめるため潜入。店内では『会員になってから女性を選べる』と説明され、通常のマッサージ店を装いながら実態は性的サービスを暗に持ちかける店だったことが判明した。出典動画: youtube.com/watch?v=IMZtBjHDQkc", lat:28.4796, lng:77.0800, video:"IMZtBjHDQkc"},
+    {id:9, name:"セクター29 ナイトスポット街（グルガオン）— 物乞い児童に囲まれる", type:"violence", date:"2024-08-20", notes:"Leisure Valley Road周辺のバー街を訪れた日本人YouTuber一行が、風船売りを装う物乞いの子供たちに執拗に取り囲まれて体を触られ、『危ない』と感じてその場から逃走した。子供たちは大人に働かされ、稼いだ金は大人に搾取されている実態も語られている。出典動画: youtube.com/watch?v=_gYgACmGM8A", lat:28.4593, lng:77.0724, video:"_gYgACmGM8A"},
+    {id:10, name:"ニューデリー駅周辺 — 偽ツアー窓口の詐欺", type:"scam", date:"2025-02-06", notes:"『日本語が話せるインド人』が観光案内窓口で近づき、『選挙と繁忙期で電車のチケットが取れない』と嘘をついて高額なツアーパッケージを契約させた。1万6000ルピーを請求されたが、後に警察へ通報すると詰め寄って交渉し、1万ルピーを取り返した。出典記事: note.com/_hisahiro57_/n/n95fa33c821b7", lat:28.6435, lng:77.2140, link:"https://note.com/_hisahiro57_/n/n95fa33c821b7"},
+    {id:11, name:"チャンドニーチョーク — 物乞いに腕をつかまれる", type:"violence", date:"2026-01-19", notes:"混雑した市場で物乞いの男に服をつかまれ『10ルピーくれ』と迫られ、振り切るのに力が必要だった。別の場面では子供が腕を強く引っ張って金をせがみ、周囲ではスリのグループが手のジェスチャーで獲物の位置を仲間に伝えているのも目撃された。出典記事: note.com/oru__spice/n/n92e256ca57ad", lat:28.6506, lng:77.2303, link:"https://note.com/oru__spice/n/n92e256ca57ad"},
+    {id:12, name:"ニューデリー駅周辺 — 『ホテル周辺は危険』詐欺", type:"scam", date:"2024-05-12", notes:"見知らぬ現地人が行き先のホテルを尋ね、『そのエリアは危険地帯だからやめとけ、案内してあげる』と声をかけてきた。自然に近づいてきて話しかけてくるインド人は詐欺師と思った方がいいという典型的な手口で、振り切って難を逃れた。出典動画: youtube.com/watch?v=99fI-p2-G-I", lat:28.6270, lng:77.2192, video:"99fI-p2-G-I"},
+    {id:13, name:"ニューデリー駅 — 組織的トゥクトゥク詐欺網", type:"violence", date:"2025-07-07", notes:"駅の跨線橋を徒歩で渡ろうとしたところ係員に『チケットがないと渡れない、政府指定のオートリキシャで迂回しろ』と言われ、その後の検問でも『宿泊エリアは封鎖中』と嘘をつかれ偽の旅行代理店へ連れて行かれた。断って解放された後、運転手が豹変し40ドルを要求してきたため、有り金の100ルピーだけ渡して逃げた。出典動画: youtube.com/watch?v=cl4IOCXPtEU", lat:28.6440, lng:77.2135, video:"cl4IOCXPtEU"},
+    {id:14, name:"大使館エリア付近 — タクシー運転手のコミッション詐欺", type:"scam", date:"2024-01-02", notes:"地元向けのサリーを買いたいと目的地を伝えたタクシー運転手に、スラム街の入口や全く別の高級サリー専門店へ繰り返し降ろされた。地元の店は『ぼったくられるから危険』と嘘をつかれ、運転手が委託手数料を得られる高級店へ誘導されたとみられる。出典動画: youtube.com/watch?v=boi2Bdpe1Z4", lat:28.5921, lng:77.1900, video:"boi2Bdpe1Z4"},
+    {id:15, name:"ニューデリー駅 — 偽旅行代理店(危険区域)詐欺", type:"violence", date:"2022-12-22", notes:"駅の跨線橋で『この先は危険だから』と親切を装う男に偽の旅行代理店へ案内される。薬物使用者らしき人物や体格の良い男たちがいる人気の少ない場所で、スマホで調べようとすると運転手に強く制止された。店内で偽の電話でホテル予約をキャンセルされ、架空の1週間ツアーを組まされそうになったが詐欺だと確信し抜け出した。出典動画: youtube.com/watch?v=NcqX_0Am1ic", lat:28.6430, lng:77.2145, video:"NcqX_0Am1ic"},
+    {id:16, name:"IGIエアポート付近 — Uber車内に置き忘れた携帯電話", type:"theft", date:"2023-03-10", notes:"空港へ向かうUberタクシーの中で寝てしまい携帯電話を置き忘れて下車。運転手はそのまま走り去り電話にも出ず、位置情報を頼りに追跡するも4時間以上見つからなかった。周囲の人々の助けと警察の捜索でようやく発見され、警察署で無事受け取ることができた。出典動画: youtube.com/watch?v=cib17b75yY0", lat:28.5562, lng:77.1000, video:"cib17b75yY0"},
+    {id:17, name:"GB通り(オールドデリー) — 薬物使用者につきまとわれる", type:"violence", date:"2025-12-31", notes:"人身売買の問題で知られるGB通り周辺を歩いていたところ、薬物を使用している様子の男に30分以上つきまとわれた。危害は加えられなかったが恐怖で涙が出るほどで、Uberを呼んでその場を離れた。出典動画: youtube.com/watch?v=MHcncZx1nBU", lat:28.6475, lng:77.2228, video:"MHcncZx1nBU"}
   ];
 
   var activeFilters = {scam:true, theft:true, violence:true};
@@ -356,7 +361,7 @@
     // i.ytimg.com is YouTube's actual image CDN (what youtube.com itself
     // uses for thumbnails). img.youtube.com is just a redirect to it, and
     // some network filters/ad-blockers block anything under the literal
-    // "youtube.com" hostname while leaving ytimg.com untouched â hitting
+    // "youtube.com" hostname while leaving ytimg.com untouched — hitting
     // the CDN directly avoids that.
     return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg';
   }
@@ -393,7 +398,7 @@
     if(videoId){
       // The marker itself IS the thumbnail and links straight to YouTube on
       // click; the bound Leaflet popup (with notes) still opens too, since
-      // the two don't conflict â one opens a new tab, one stays here.
+      // the two don't conflict — one opens a new tab, one stays here.
       var html = '<a class="marker-yt-thumb" href="'+ytWatchUrl(videoId)+'" target="_blank" rel="noopener noreferrer" title="Watch on YouTube">'+
                     '<span class="yt-fallback">'+cameraIconSvg(15)+'</span>'+
                     '<img src="'+ytThumbUrl(videoId)+'" onerror="this.remove();">'+
