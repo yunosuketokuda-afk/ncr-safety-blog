@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCR Overworld (Pixel Map Concept)</title>
+<meta name="description" content="A retro pixel-art concept map of the NCR scam awareness guide, styled like a classic RPG overworld.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:#0b1020;
+    color:#fff;
+    font-family:'Press Start 2P', monospace;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:18px 12px 40px;
+    min-height:100%;
+  }
+  .page-title{font-size:13px;margin:0 0 4px;text-align:center;letter-spacing:1px;}
+  .page-sub{font-size:8px;color:#9aa1c9;margin:0 0 4px;text-align:center;line-height:1.8;}
+  .nav-links{font-size:8px;margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+  .nav-links a{color:#7fd1c9;text-decoration:none;}
+  .nav-links a:hover{text-decoration:underline;}
+
+  .type-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;}
+  .type-btn{
+    font-family:inherit;font-size:8px;color:#fff;
+    background:#20264a;border:2px solid #000;box-shadow:2px 2px 0 #000;
+    padding:8px 9px;cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .type-btn:active{box-shadow:1px 1px 0 #000;transform:translate(1px,1px);}
+  .type-btn.off{opacity:0.35;}
+  .type-btn .dot{width:8px;height:8px;display:inline-block;}
+  .type-btn.scam .dot{background:#a78bfa;}
+  .type-btn.theft .dot{background:#2dd4bf;}
+  .type-btn.violence .dot{background:#818cf8;}
+
+  .game-frame{
+    position:relative;
+    width:100%;
+    max-width:900px;
+    aspect-ratio:8/5;
+    background:#000;
+    border:6px solid #3a3f6b;
+    box-shadow:0 0 0 3px #000, 0 8px 24px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  canvas#world{
+    position:absolute;inset:0;width:100%;height:100%;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+  }
+  .sprite-layer{position:absolute;inset:0;}
+  .sprite{
+    position:absolute;
+    transform:translate(-50%,-100%);
+    width:24px;height:24px;
+    border:2px solid #000;
+    box-shadow:2px 2px 0 #000;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;line-height:1;
+    cursor:pointer;
+    transition:transform .1s ease;
+  }
+  .sprite:hover{transform:translate(-50%,-104%) scale(1.15);}
+  .sprite.hidden{display:none;}
+  .sprite.scam{background:#7c3aed;}
+  .sprite.theft{background:#0d9488;}
+  .sprite.violence{background:#4338ca;}
+
+  .place-label{
+    position:absolute;transform:translate(-50%,0);
+    font-size:8px;color:#fff;text-shadow:2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    letter-spacing:1px;white-space:nowrap;
+  }
+
+  .dialog-box{
+    position:absolute;left:14px;right:14px;bottom:14px;
+    background:#10182c;border:3px solid #fff;box-shadow:0 0 0 3px #000;
+    padding:12px 34px 12px 14px;
+    display:none;
+    max-height:60%;
+    overflow-y:auto;
+  }
+  .dialog-box.open{display:block;}
+  .dialog-close{
+    position:absolute;top:8px;right:10px;cursor:pointer;
+    font-size:11px;color:#fff;
+  }
+  .dialog-tag{
+    display:inline-block;font-size:7px;padding:4px 6px;margin-bottom:8px;
+    text-transform:uppercase;letter-spacing:1px;
+  }
+  .dialog-tag.scam{background:#7c3aed;}
+  .dialog-tag.theft{background:#0d9488;}
+  .dialog-tag.violence{background:#4338ca;}
+  .dialog-name{font-size:10px;margin:0 0 8px;line-height:1.6;}
+  .dialog-area{font-size:7px;color:#9aa1c9;margin:0 0 10px;}
+  .dialog-summary{font-size:8px;line-height:2;color:#e6e8f5;margin:0 0 10px;}
+  .dialog-avoid{font-size:8px;line-height:2;color:#a3f7d5;}
+  .dialog-avoid b{color:#fff;}
+  .dialog-hint{
+    position:absolute;left:14px;bottom:14px;font-size:8px;color:#c9cdf0;
+    background:rgba(16,24,44,0.85);border:2px solid #000;padding:8px 10px;
+  }
+
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:#3a3f6b;}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">NCR OVERWORLD</h1>
+<p class="page-sub">A pixel-art concept map &middot; same 10 tactics, drawn as an original RPG-style world instead of a real map</p>
+<div class="nav-links">
+  <a href="safety-guide-en.html">&larr; Real map (English)</a>
+  <a href="index.html">Japanese field-notes version</a>
+</div>
+
+<div class="type-bar" id="type-bar">
+  <div class="type-btn scam" data-val="scam" onclick="toggleType(this,'scam')"><span class="dot"></span>SCAM</div>
+  <div class="type-btn theft" data-val="theft" onclick="toggleType(this,'theft')"><span class="dot"></span>THEFT</div>
+  <div class="type-btn violence" data-val="violence" onclick="toggleType(this,'violence')"><span class="dot"></span>VIOLENCE</div>
+</div>
+
+<div class="game-frame" id="frame">
+  <canvas id="world"></canvas>
+  <div class="sprite-layer" id="sprite-layer"></div>
+  <div class="dialog-hint" id="hint">Click a sprite to read it</div>
+  <div class="dialog-box" id="dialog">
+    <span class="dialog-close" onclick="closeDialog()">&times;</span>
+    <div id="dialog-content"></div>
+  </div>
+</div>
+
+<script>
+  var GRID_W = 40, GRID_H = 25, TILE = 10;
+
+  var tactics = [
+    {id:1, name:"Fake \"Tourism Office\" Redirect", type:"scam", emoji:"🪪", area:"India Gate / Connaught Place", tx:27, ty:9, summary:"A friendly stranger strikes up conversation near a landmark and offers a free rickshaw tour, then leads visitors to an unofficial travel agency displaying a fake \"Ministry of Tourism\" sign that pressures them into an overpriced multi-day package.", avoid:"Book tours only through your hotel or a pre-vetted operator."},
+    {id:2, name:"\"Your Train Is Cancelled\" Redirect", type:"scam", emoji:"🚉", area:"New Delhi Railway Station", tx:25, ty:7, summary:"Someone claims the platform is closed or your train is cancelled, then guides travelers away from the station to a private travel agency instead.", avoid:"Check train status only on the official IRCTC app or with uniformed railway staff."},
+    {id:3, name:"Rigged Taxi Meter / Long Route", type:"scam", emoji:"🚕", area:"IGI Airport", tx:18, ty:14, summary:"Drivers take a deliberately roundabout route, claim the meter is broken, or demand a high flat fare once the ride is underway.", avoid:"Use the official prepaid taxi counter or a ride-hailing app, and track the route yourself."},
+    {id:4, name:"Street \"Ear Cleaning\" Health Scam", type:"scam", emoji:"👂", area:"Connaught Place", tx:28, ty:10, summary:"A self-described ear specialist offers a free inspection, then demands escalating cash payments to stop.", avoid:"Decline all unsolicited medical or grooming offers from strangers on the street."},
+    {id:5, name:"Gem / Carpet \"Investment\" Scam", type:"scam", emoji:"💎", area:"Karol Bagh / Old Delhi markets", tx:24, ty:9, summary:"A shop convinces a traveler that goods bought cheaply can be resold for a huge profit back home, then arranges a \"shipping\" deal that never delivers value.", avoid:"Never buy anything framed as a resale investment."},
+    {id:6, name:"Currency Short-Counting", type:"scam", emoji:"💵", area:"Paharganj", tx:25, ty:9, summary:"A vendor counts change quickly and hands back less than owed, or swaps a large note for a smaller one during a distracting handoff.", avoid:"Count all cash slowly and openly before completing a transaction."},
+    {id:7, name:"Crowd Pickpocketing", type:"theft", emoji:"👛", area:"Chandni Chowk market", tx:27, ty:6, summary:"In dense markets, pickpockets work in pairs — one creates a distraction while another lifts a wallet or phone.", avoid:"Keep valuables in a zipped front pocket and bags worn to the front in crowds."},
+    {id:8, name:"Distraction Bag-Snatching Team", type:"theft", emoji:"🎒", area:"Cyber Hub, Gurugram", tx:9, ty:17, summary:"A group distracts a visitor while an accomplice grabs an unattended bag or phone off a table.", avoid:"Never leave a bag or phone unattended, even for a moment."},
+    {id:9, name:"Aggressive Begging / Child Gangs", type:"violence", emoji:"✋", area:"Chandni Chowk area", tx:28, ty:6, summary:"Groups of children, often directed by adults, surround visitors and grab at clothing or arms, not backing off easily when refused.", avoid:"Keep walking calmly toward a shop or crowd rather than stopping to argue."},
+    {id:10, name:"Nightlife Area Harassment", type:"violence", emoji:"⚠️", area:"Sector 29, Gurugram", tx:11, ty:19, summary:"Around bar streets late at night, groups can surround and closely follow visitors, escalating if ignored for too long.", avoid:"Travel in a group after dark and keep a ride-hailing app ready."}
+  ];
+
+  var activeTypes = {scam:true, theft:true, violence:true};
+
+  function drawWorld(){
+    var canvas = document.getElementById('world');
+    canvas.width = GRID_W * TILE;
+    canvas.height = GRID_H * TILE;
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    var GRASS = ['#3f7530', '#4f8a3d', '#5c9c46'];
+    for(var y=0; y<GRID_H; y++){
+      for(var x=0; x<GRID_W; x++){
+        var n = (x*13 + y*29) % 7;
+        ctx.fillStyle = GRASS[n===0?0:(n===1?1:2)];
+        ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+      }
+    }
+
+    // Yamuna-inspired river along the eastern edge
+    for(var ry=0; ry<GRID_H; ry++){
+      var rx = 34 + Math.round(Math.sin(ry/3.2)*2);
+      ctx.fillStyle = '#3b6ea5';
+      ctx.fillRect(rx*TILE, ry*TILE, TILE, TILE);
+      ctx.fillStyle = '#4a82c2';
+      ctx.fillRect(rx*TILE+2, ry*TILE+2, TILE-4, TILE-4);
+    }
+
+    // Dirt road connecting the Gurugram and Delhi clusters
+    var steps = 40;
+    for(var i=0; i<=steps; i++){
+      var t = i/steps;
+      var px = Math.round(11 + (26-11)*t + Math.sin(t*6)*1.5);
+      var py = Math.round(18 + (8-18)*t + Math.cos(t*4)*1.0);
+      ctx.fillStyle = '#8a7a5c';
+      ctx.fillRect(px*TILE, py*TILE, TILE, TILE);
+    }
+
+    // Scattered trees
+    var trees = [[3,3],[6,2],[2,9],[5,14],[1,20],[15,3],[20,2],[36,20],[30,22],
+                 [22,20],[37,4],[14,22],[8,6],[16,12],[24,18],[6,20],[19,22],[4,17]];
+    trees.forEach(function(p){
+      var cx = p[0]*TILE+TILE/2, cy = p[1]*TILE+TILE/2;
+      ctx.fillStyle = '#2d5a26';
+      ctx.beginPath(); ctx.arc(cx, cy, TILE*0.6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3a3226';
+      ctx.fillRect(cx-1, cy+TILE*0.4, 2, 3);
+    });
+
+    drawCastle(ctx, 27, 8, '#c0392b');
+    drawCastle(ctx, 11, 18, '#2980b9');
+  }
+
+  function drawCastle(ctx, cx, cy, roofColor){
+    var px = cx*TILE, py = cy*TILE;
+    ctx.fillStyle = '#6b6b6b';
+    ctx.fillRect(px-15, py-10, 30, 20);
+    ctx.fillStyle = '#4a4a4a';
+    ctx.fillRect(px-15, py-10, 30, 4);
+    ctx.fillStyle = '#5a5a5a';
+    ctx.fillRect(px-18, py-16, 8, 10);
+    ctx.fillRect(px+10, py-16, 8, 10);
+    ctx.fillRect(px-4, py-20, 8, 14);
+    ctx.fillStyle = roofColor;
+    ctx.beginPath(); ctx.moveTo(px-18,py-16); ctx.lineTo(px-14,py-22); ctx.lineTo(px-10,py-16); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(px+10,py-16); ctx.lineTo(px+14,py-22); ctx.lineTo(px+18,py-16); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(px-4,py-20); ctx.lineTo(px,py-26); ctx.lineTo(px+4,py-20); ctx.fill();
+  }
+
+  function pct(tx, ty){
+    return {left: (tx/GRID_W*100).toFixed(2)+'%', top: (ty/GRID_H*100).toFixed(2)+'%'};
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function renderSprites(){
+    var layer = document.getElementById('sprite-layer');
+    var labelDelhi = pct(27, 8);
+    var labelGuru = pct(11, 18);
+    var html = '<div class="place-label" style="left:'+labelDelhi.left+';top:calc('+labelDelhi.top+' + 14px);">DELHI</div>'+
+                '<div class="place-label" style="left:'+labelGuru.left+';top:calc('+labelGuru.top+' + 14px);">GURUGRAM</div>';
+    html += tactics.map(function(t){
+      var p = pct(t.tx, t.ty);
+      var hidden = activeTypes[t.type] ? '' : ' hidden';
+      return '<div class="sprite '+t.type+hidden+'" data-id="'+t.id+'" style="left:'+p.left+';top:'+p.top+';" '+
+             'onclick="openDialog('+t.id+')" title="'+escapeHtml(t.name)+'">'+t.emoji+'</div>';
+    }).join('');
+    layer.innerHTML = html;
+  }
+
+  function toggleType(el, val){
+    activeTypes[val] = !activeTypes[val];
+    el.classList.toggle('off', !activeTypes[val]);
+    document.querySelectorAll('.sprite.'+val).forEach(function(s){
+      s.classList.toggle('hidden', !activeTypes[val]);
+    });
+  }
+
+  function openDialog(id){
+    var t = tactics.find(function(x){ return x.id === id; });
+    if(!t) return;
+    document.getElementById('hint').style.display = 'none';
+    var content = document.getElementById('dialog-content');
+    content.innerHTML =
+      '<span class="dialog-tag '+t.type+'">'+t.type+'</span>'+
+      '<p class="dialog-name">'+t.emoji+' '+escapeHtml(t.name)+'</p>'+
+      '<p class="dialog-area">'+escapeHtml(t.area)+'</p>'+
+      '<p class="dialog-summary">'+escapeHtml(t.summary)+'</p>'+
+      '<p class="dialog-avoid"><b>AVOID IT:</b> '+escapeHtml(t.avoid)+'</p>';
+    document.getElementById('dialog').classList.add('open');
+  }
+
+  function closeDialog(){
+    document.getElementById('dialog').classList.remove('open');
+  }
+
+  drawWorld();
+  renderSprites();
+  window.addEventListener('resize', drawWorld);
+</script>
+</body>
+</html>
