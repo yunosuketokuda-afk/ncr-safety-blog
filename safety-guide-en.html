@@ -358,13 +358,13 @@
     maskLayer.setLatLngs(rings);
   }
 
+  // The boundary outline itself always stays on the map — the Highlight
+  // chip only controls the dimming mask (i.e. whether that area is exempt
+  // from the darkened-out-of-scope overlay), not whether its border shows.
   function toggleArea(el, val){
     activeAreas[val] = !activeAreas[val];
     el.classList.toggle('off', !activeAreas[val]);
     rebuildMask();
-    var glow = areaGlow[val];
-    if(activeAreas[val]){ if(!map.hasLayer(glow)) glow.addTo(map); }
-    else { if(map.hasLayer(glow)) map.removeLayer(glow); }
   }
 
   function typeColor(type){
