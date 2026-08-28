@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NCR Overworld (Pixel Map Concept)</title>
-<meta name="description" content="A retro pixel-art concept map of the NCR scam awareness guide, styled like a classic RPG overworld.">
+<title>NCR Dot Map (Pixel Concept)</title>
+<meta name="description" content="A dot-matrix map of the real Delhi and Gurugram district shapes, in the same style as the Leaflet map, rendered as retro pixel dots.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
     position:relative;
     width:100%;
     max-width:900px;
-    aspect-ratio:8/5;
+    aspect-ratio:1/1;
     background:#000;
     border:6px solid #3a3f6b;
     box-shadow:0 0 0 3px #000, 0 8px 24px rgba(0,0,0,0.6);
@@ -115,8 +115,8 @@
 </head>
 <body>
 
-<h1 class="page-title">NCR OVERWORLD</h1>
-<p class="page-sub">A pixel-art concept map &middot; same 10 tactics, drawn as an original RPG-style world instead of a real map</p>
+<h1 class="page-title">NCR DOT MAP</h1>
+<p class="page-sub">The real Delhi &amp; Gurugram district shapes, rasterized into dots &middot; same boundaries and marker positions as the Leaflet map</p>
 <div class="nav-links">
   <a href="safety-guide-en.html">&larr; Real map (English)</a>
   <a href="index.html">Japanese field-notes version</a>
@@ -139,91 +139,122 @@
 </div>
 
 <script>
-  var GRID_W = 40, GRID_H = 25, TILE = 10;
+  // Exact same district boundaries used by index.html / safety-guide-en.html
+  // (real coordinates from OpenStreetMap via Nominatim) — this is what
+  // makes the dots trace the true shape of Delhi and Gurugram, not an
+  // invented layout.
+  var DELHI_BOUNDARY = [[28.5825,76.8394],[28.5500,76.8459],[28.5437,76.8644],[28.5203,76.8871],[28.5056,76.8805],[28.5014,76.8854],[28.5138,76.9069],[28.5053,76.9528],[28.5213,76.9784],[28.5147,77.0101],[28.5211,77.0170],[28.5335,77.0017],[28.5405,77.0135],[28.5252,77.0434],[28.5166,77.0462],[28.5119,77.0672],[28.5203,77.0723],[28.5180,77.0804],[28.4951,77.1195],[28.4732,77.1125],[28.4428,77.1277],[28.4285,77.1628],[28.4062,77.1715],[28.4102,77.2179],[28.4250,77.2500],[28.4544,77.2459],[28.4585,77.2331],[28.4788,77.2434],[28.4965,77.2902],[28.4834,77.3141],[28.5135,77.3453],[28.5563,77.2998],[28.5762,77.2929],[28.5965,77.3134],[28.6051,77.3412],[28.6236,77.3404],[28.6377,77.3168],[28.6779,77.3252],[28.6816,77.3330],[28.6987,77.3237],[28.7132,77.3311],[28.7064,77.2913],[28.7227,77.2909],[28.7356,77.2757],[28.7385,77.2558],[28.7526,77.2587],[28.7592,77.2381],[28.7750,77.2329],[28.7792,77.2210],[28.7846,77.2280],[28.7867,77.2073],[28.7970,77.2000],[28.8136,77.2021],[28.8108,77.2187],[28.8223,77.2237],[28.8558,77.2142],[28.8585,77.1752],[28.8368,77.1580],[28.8381,77.1453],[28.8617,77.1402],[28.8580,77.1219],[28.8834,77.0826],[28.8672,77.0747],[28.8680,77.0583],[28.8318,77.0402],[28.8396,76.9944],[28.8215,76.9803],[28.8277,76.9658],[28.8149,76.9617],[28.8161,76.9492],[28.7987,76.9419],[28.7903,76.9540],[28.7798,76.9483],[28.7677,76.9557],[28.7539,76.9444],[28.7428,76.9588],[28.7299,76.9598],[28.7125,76.9481],[28.6992,76.9680],[28.6696,76.9545],[28.6702,76.9374],[28.6496,76.9245],[28.6331,76.9444],[28.6272,76.9424],[28.6184,76.9353],[28.6315,76.9191],[28.6236,76.9065],[28.6318,76.8894],[28.5855,76.8646],[28.5825,76.8394]];
+  var GURUGRAM_BOUNDARY = [[28.3071,76.6510],[28.3025,76.6671],[28.3167,76.6737],[28.3138,76.6857],[28.2693,76.6738],[28.2631,76.6784],[28.2634,76.7148],[28.2401,76.7690],[28.2237,76.7813],[28.2556,76.7976],[28.2536,76.8114],[28.2406,76.8125],[28.2442,76.8256],[28.2344,76.8577],[28.2623,76.8763],[28.2523,76.8991],[28.2767,76.9180],[28.3006,76.9050],[28.2993,76.9164],[28.3243,76.9332],[28.3127,76.9516],[28.3269,76.9611],[28.3256,76.9712],[28.3346,76.9786],[28.3257,76.9995],[28.3052,77.0110],[28.2481,77.0215],[28.2441,77.0563],[28.2230,77.0548],[28.2165,77.0621],[28.2147,77.0712],[28.2300,77.0816],[28.2193,77.0942],[28.2273,77.1027],[28.2179,77.1210],[28.2266,77.1339],[28.2006,77.1715],[28.2118,77.2023],[28.2293,77.2015],[28.2353,77.1911],[28.2452,77.1953],[28.2793,77.2419],[28.2989,77.2082],[28.2894,77.2008],[28.3177,77.1567],[28.3838,77.1514],[28.4046,77.1741],[28.4285,77.1628],[28.4428,77.1277],[28.4732,77.1125],[28.4951,77.1195],[28.5180,77.0804],[28.5203,77.0723],[28.5119,77.0672],[28.5166,77.0462],[28.5252,77.0434],[28.5409,77.0078],[28.5310,77.0013],[28.5211,77.0170],[28.5147,77.0101],[28.5213,76.9784],[28.5053,76.9528],[28.5138,76.9069],[28.5008,76.8919],[28.5047,76.8819],[28.4978,76.8743],[28.5041,76.8248],[28.4751,76.8109],[28.4642,76.7913],[28.4774,76.7717],[28.4595,76.7602],[28.4612,76.7507],[28.4700,76.7349],[28.4863,76.7260],[28.4929,76.7050],[28.4576,76.7071],[28.4357,76.7175],[28.4001,76.7083],[28.3748,76.7353],[28.3565,76.7265],[28.3541,76.7157],[28.3790,76.6693],[28.3071,76.6510]];
 
   var tactics = [
-    {id:1, name:"Fake \"Tourism Office\" Redirect", type:"scam", emoji:"🪪", area:"India Gate / Connaught Place", tx:27, ty:9, summary:"A friendly stranger strikes up conversation near a landmark and offers a free rickshaw tour, then leads visitors to an unofficial travel agency displaying a fake \"Ministry of Tourism\" sign that pressures them into an overpriced multi-day package.", avoid:"Book tours only through your hotel or a pre-vetted operator."},
-    {id:2, name:"\"Your Train Is Cancelled\" Redirect", type:"scam", emoji:"🚉", area:"New Delhi Railway Station", tx:25, ty:7, summary:"Someone claims the platform is closed or your train is cancelled, then guides travelers away from the station to a private travel agency instead.", avoid:"Check train status only on the official IRCTC app or with uniformed railway staff."},
-    {id:3, name:"Rigged Taxi Meter / Long Route", type:"scam", emoji:"🚕", area:"IGI Airport", tx:18, ty:14, summary:"Drivers take a deliberately roundabout route, claim the meter is broken, or demand a high flat fare once the ride is underway.", avoid:"Use the official prepaid taxi counter or a ride-hailing app, and track the route yourself."},
-    {id:4, name:"Street \"Ear Cleaning\" Health Scam", type:"scam", emoji:"👂", area:"Connaught Place", tx:28, ty:10, summary:"A self-described ear specialist offers a free inspection, then demands escalating cash payments to stop.", avoid:"Decline all unsolicited medical or grooming offers from strangers on the street."},
-    {id:5, name:"Gem / Carpet \"Investment\" Scam", type:"scam", emoji:"💎", area:"Karol Bagh / Old Delhi markets", tx:24, ty:9, summary:"A shop convinces a traveler that goods bought cheaply can be resold for a huge profit back home, then arranges a \"shipping\" deal that never delivers value.", avoid:"Never buy anything framed as a resale investment."},
-    {id:6, name:"Currency Short-Counting", type:"scam", emoji:"💵", area:"Paharganj", tx:25, ty:9, summary:"A vendor counts change quickly and hands back less than owed, or swaps a large note for a smaller one during a distracting handoff.", avoid:"Count all cash slowly and openly before completing a transaction."},
-    {id:7, name:"Crowd Pickpocketing", type:"theft", emoji:"👛", area:"Chandni Chowk market", tx:27, ty:6, summary:"In dense markets, pickpockets work in pairs — one creates a distraction while another lifts a wallet or phone.", avoid:"Keep valuables in a zipped front pocket and bags worn to the front in crowds."},
-    {id:8, name:"Distraction Bag-Snatching Team", type:"theft", emoji:"🎒", area:"Cyber Hub, Gurugram", tx:9, ty:17, summary:"A group distracts a visitor while an accomplice grabs an unattended bag or phone off a table.", avoid:"Never leave a bag or phone unattended, even for a moment."},
-    {id:9, name:"Aggressive Begging / Child Gangs", type:"violence", emoji:"✋", area:"Chandni Chowk area", tx:28, ty:6, summary:"Groups of children, often directed by adults, surround visitors and grab at clothing or arms, not backing off easily when refused.", avoid:"Keep walking calmly toward a shop or crowd rather than stopping to argue."},
-    {id:10, name:"Nightlife Area Harassment", type:"violence", emoji:"⚠️", area:"Sector 29, Gurugram", tx:11, ty:19, summary:"Around bar streets late at night, groups can surround and closely follow visitors, escalating if ignored for too long.", avoid:"Travel in a group after dark and keep a ride-hailing app ready."}
+    {id:1, name:"Fake \"Tourism Office\" Redirect", type:"scam", emoji:"🪪", area:"India Gate / Connaught Place", lat:28.6129, lng:77.2295, summary:"A friendly stranger strikes up conversation near a landmark and offers a free rickshaw tour, then leads visitors to an unofficial travel agency displaying a fake \"Ministry of Tourism\" sign that pressures them into an overpriced multi-day package.", avoid:"Book tours only through your hotel or a pre-vetted operator."},
+    {id:2, name:"\"Your Train Is Cancelled\" Redirect", type:"scam", emoji:"🚉", area:"New Delhi Railway Station", lat:28.6435, lng:77.2140, summary:"Someone claims the platform is closed or your train is cancelled, then guides travelers away from the station to a private travel agency instead.", avoid:"Check train status only on the official IRCTC app or with uniformed railway staff."},
+    {id:3, name:"Rigged Taxi Meter / Long Route", type:"scam", emoji:"🚕", area:"IGI Airport", lat:28.5562, lng:77.1000, summary:"Drivers take a deliberately roundabout route, claim the meter is broken, or demand a high flat fare once the ride is underway.", avoid:"Use the official prepaid taxi counter or a ride-hailing app, and track the route yourself."},
+    {id:4, name:"Street \"Ear Cleaning\" Health Scam", type:"scam", emoji:"👂", area:"Connaught Place", lat:28.6330, lng:77.2175, summary:"A self-described ear specialist offers a free inspection, then demands escalating cash payments to stop.", avoid:"Decline all unsolicited medical or grooming offers from strangers on the street."},
+    {id:5, name:"Gem / Carpet \"Investment\" Scam", type:"scam", emoji:"💎", area:"Karol Bagh / Old Delhi markets", lat:28.6519, lng:77.1909, summary:"A shop convinces a traveler that goods bought cheaply can be resold for a huge profit back home, then arranges a \"shipping\" deal that never delivers value.", avoid:"Never buy anything framed as a resale investment."},
+    {id:6, name:"Currency Short-Counting", type:"scam", emoji:"💵", area:"Paharganj", lat:28.6440, lng:77.2110, summary:"A vendor counts change quickly and hands back less than owed, or swaps a large note for a smaller one during a distracting handoff.", avoid:"Count all cash slowly and openly before completing a transaction."},
+    {id:7, name:"Crowd Pickpocketing", type:"theft", emoji:"👛", area:"Chandni Chowk market", lat:28.6506, lng:77.2303, summary:"In dense markets, pickpockets work in pairs — one creates a distraction while another lifts a wallet or phone.", avoid:"Keep valuables in a zipped front pocket and bags worn to the front in crowds."},
+    {id:8, name:"Distraction Bag-Snatching Team", type:"theft", emoji:"🎒", area:"Cyber Hub, Gurugram", lat:28.4950, lng:77.0891, summary:"A group distracts a visitor while an accomplice grabs an unattended bag or phone off a table.", avoid:"Never leave a bag or phone unattended, even for a moment."},
+    {id:9, name:"Aggressive Begging / Child Gangs", type:"violence", emoji:"✋", area:"Chandni Chowk area", lat:28.6490, lng:77.2280, summary:"Groups of children, often directed by adults, surround visitors and grab at clothing or arms, not backing off easily when refused.", avoid:"Keep walking calmly toward a shop or crowd rather than stopping to argue."},
+    {id:10, name:"Nightlife Area Harassment", type:"violence", emoji:"⚠️", area:"Sector 29, Gurugram", lat:28.4593, lng:77.0724, summary:"Around bar streets late at night, groups can surround and closely follow visitors, escalating if ignored for too long.", avoid:"Travel in a group after dark and keep a ride-hailing app ready."}
   ];
 
   var activeTypes = {scam:true, theft:true, violence:true};
 
-  function drawWorld(){
-    var canvas = document.getElementById('world');
-    canvas.width = GRID_W * TILE;
-    canvas.height = GRID_H * TILE;
-    var ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
+  // Bounding box across both real boundaries, with a little padding.
+  var B = (function(){
+    var minLat=90, maxLat=-90, minLng=180, maxLng=-180;
+    [DELHI_BOUNDARY, GURUGRAM_BOUNDARY].forEach(function(poly){
+      poly.forEach(function(p){
+        if(p[0]<minLat) minLat=p[0];
+        if(p[0]>maxLat) maxLat=p[0];
+        if(p[1]<minLng) minLng=p[1];
+        if(p[1]>maxLng) maxLng=p[1];
+      });
+    });
+    var padLat=(maxLat-minLat)*0.08, padLng=(maxLng-minLng)*0.08;
+    return {minLat:minLat-padLat, maxLat:maxLat+padLat, minLng:minLng-padLng, maxLng:maxLng+padLng};
+  })();
 
-    var GRASS = ['#3f7530', '#4f8a3d', '#5c9c46'];
-    for(var y=0; y<GRID_H; y++){
-      for(var x=0; x<GRID_W; x++){
-        var n = (x*13 + y*29) % 7;
-        ctx.fillStyle = GRASS[n===0?0:(n===1?1:2)];
-        ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+  // Canvas is sized to the bounding box's true aspect ratio (with a
+  // latitude-based longitude correction) so the dot shape isn't stretched.
+  var centerLat = (B.minLat+B.maxLat)/2;
+  var lngCompress = Math.cos(centerLat*Math.PI/180);
+  var aspect = ((B.maxLng-B.minLng)*lngCompress) / (B.maxLat-B.minLat);
+  var CANVAS_H = 560;
+  var CANVAS_W = Math.round(CANVAS_H*aspect);
+  var CELL = 7;
+
+  function project(lat, lng){
+    return {
+      x: (lng-B.minLng)/(B.maxLng-B.minLng)*CANVAS_W,
+      y: (B.maxLat-lat)/(B.maxLat-B.minLat)*CANVAS_H
+    };
+  }
+
+  function pointInPolygon(lat, lng, poly){
+    var inside = false;
+    for(var i=0, j=poly.length-1; i<poly.length; j=i++){
+      var latI=poly[i][0], lngI=poly[i][1], latJ=poly[j][0], lngJ=poly[j][1];
+      var hit = ((lngI>lng) !== (lngJ>lng)) && (lat < (latJ-latI)*(lng-lngI)/(lngJ-lngI)+latI);
+      if(hit) inside = !inside;
+    }
+    return inside;
+  }
+
+  function centroidLatLng(poly){
+    var sLat=0, sLng=0;
+    poly.forEach(function(p){ sLat+=p[0]; sLng+=p[1]; });
+    return [sLat/poly.length, sLng/poly.length];
+  }
+
+  function drawBoundary(ctx, poly){
+    ctx.beginPath();
+    poly.forEach(function(p, i){
+      var pt = project(p[0], p[1]);
+      if(i===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = '#7fd1c9';
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = '#7fd1c9';
+    ctx.shadowBlur = 5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawWorld(){
+    var frame = document.getElementById('frame');
+    frame.style.aspectRatio = CANVAS_W + '/' + CANVAS_H;
+    var canvas = document.getElementById('world');
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Rasterize the two real district polygons into a dot grid — every
+    // dot's presence/absence traces the true Delhi/Gurugram shape.
+    for(var py=CELL/2; py<CANVAS_H; py+=CELL){
+      for(var px=CELL/2; px<CANVAS_W; px+=CELL){
+        var lng = B.minLng + (px/CANVAS_W)*(B.maxLng-B.minLng);
+        var lat = B.maxLat - (py/CANVAS_H)*(B.maxLat-B.minLat);
+        var inside = pointInPolygon(lat, lng, DELHI_BOUNDARY) || pointInPolygon(lat, lng, GURUGRAM_BOUNDARY);
+        if(!inside) continue;
+        ctx.beginPath();
+        ctx.arc(px, py, CELL*0.36, 0, Math.PI*2);
+        ctx.fillStyle = '#c9d6c8';
+        ctx.fill();
       }
     }
 
-    // Yamuna-inspired river along the eastern edge
-    for(var ry=0; ry<GRID_H; ry++){
-      var rx = 34 + Math.round(Math.sin(ry/3.2)*2);
-      ctx.fillStyle = '#3b6ea5';
-      ctx.fillRect(rx*TILE, ry*TILE, TILE, TILE);
-      ctx.fillStyle = '#4a82c2';
-      ctx.fillRect(rx*TILE+2, ry*TILE+2, TILE-4, TILE-4);
-    }
-
-    // Dirt road connecting the Gurugram and Delhi clusters
-    var steps = 40;
-    for(var i=0; i<=steps; i++){
-      var t = i/steps;
-      var px = Math.round(11 + (26-11)*t + Math.sin(t*6)*1.5);
-      var py = Math.round(18 + (8-18)*t + Math.cos(t*4)*1.0);
-      ctx.fillStyle = '#8a7a5c';
-      ctx.fillRect(px*TILE, py*TILE, TILE, TILE);
-    }
-
-    // Scattered trees
-    var trees = [[3,3],[6,2],[2,9],[5,14],[1,20],[15,3],[20,2],[36,20],[30,22],
-                 [22,20],[37,4],[14,22],[8,6],[16,12],[24,18],[6,20],[19,22],[4,17]];
-    trees.forEach(function(p){
-      var cx = p[0]*TILE+TILE/2, cy = p[1]*TILE+TILE/2;
-      ctx.fillStyle = '#2d5a26';
-      ctx.beginPath(); ctx.arc(cx, cy, TILE*0.6, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#3a3226';
-      ctx.fillRect(cx-1, cy+TILE*0.4, 2, 3);
-    });
-
-    drawCastle(ctx, 27, 8, '#c0392b');
-    drawCastle(ctx, 11, 18, '#2980b9');
+    drawBoundary(ctx, DELHI_BOUNDARY);
+    drawBoundary(ctx, GURUGRAM_BOUNDARY);
   }
 
-  function drawCastle(ctx, cx, cy, roofColor){
-    var px = cx*TILE, py = cy*TILE;
-    ctx.fillStyle = '#6b6b6b';
-    ctx.fillRect(px-15, py-10, 30, 20);
-    ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(px-15, py-10, 30, 4);
-    ctx.fillStyle = '#5a5a5a';
-    ctx.fillRect(px-18, py-16, 8, 10);
-    ctx.fillRect(px+10, py-16, 8, 10);
-    ctx.fillRect(px-4, py-20, 8, 14);
-    ctx.fillStyle = roofColor;
-    ctx.beginPath(); ctx.moveTo(px-18,py-16); ctx.lineTo(px-14,py-22); ctx.lineTo(px-10,py-16); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(px+10,py-16); ctx.lineTo(px+14,py-22); ctx.lineTo(px+18,py-16); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(px-4,py-20); ctx.lineTo(px,py-26); ctx.lineTo(px+4,py-20); ctx.fill();
-  }
-
-  function pct(tx, ty){
-    return {left: (tx/GRID_W*100).toFixed(2)+'%', top: (ty/GRID_H*100).toFixed(2)+'%'};
+  function pctFromLatLng(lat, lng){
+    var p = project(lat, lng);
+    return {left: (p.x/CANVAS_W*100).toFixed(2)+'%', top: (p.y/CANVAS_H*100).toFixed(2)+'%'};
   }
 
   function escapeHtml(s){
@@ -234,12 +265,14 @@
 
   function renderSprites(){
     var layer = document.getElementById('sprite-layer');
-    var labelDelhi = pct(27, 8);
-    var labelGuru = pct(11, 18);
-    var html = '<div class="place-label" style="left:'+labelDelhi.left+';top:calc('+labelDelhi.top+' + 14px);">DELHI</div>'+
-                '<div class="place-label" style="left:'+labelGuru.left+';top:calc('+labelGuru.top+' + 14px);">GURUGRAM</div>';
+    var delhiC = centroidLatLng(DELHI_BOUNDARY);
+    var guruC = centroidLatLng(GURUGRAM_BOUNDARY);
+    var pDelhi = pctFromLatLng(delhiC[0], delhiC[1]);
+    var pGuru = pctFromLatLng(guruC[0], guruC[1]);
+    var html = '<div class="place-label" style="left:'+pDelhi.left+';top:'+pDelhi.top+';">DELHI</div>'+
+                '<div class="place-label" style="left:'+pGuru.left+';top:'+pGuru.top+';">GURUGRAM</div>';
     html += tactics.map(function(t){
-      var p = pct(t.tx, t.ty);
+      var p = pctFromLatLng(t.lat, t.lng);
       var hidden = activeTypes[t.type] ? '' : ' hidden';
       return '<div class="sprite '+t.type+hidden+'" data-id="'+t.id+'" style="left:'+p.left+';top:'+p.top+';" '+
              'onclick="openDialog('+t.id+')" title="'+escapeHtml(t.name)+'">'+t.emoji+'</div>';
@@ -275,7 +308,6 @@
 
   drawWorld();
   renderSprites();
-  window.addEventListener('resize', drawWorld);
 </script>
 </body>
 </html>
