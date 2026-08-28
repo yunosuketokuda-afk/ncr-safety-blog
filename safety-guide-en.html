@@ -321,9 +321,13 @@
   var markers = {};
 
   var map = L.map('map', {zoomControl:true}).setView([28.56, 77.15], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // A muted basemap (few labels, low saturation) reads far more clearly
+  // here than default OSM tiles — the illustrated markers, the dimming
+  // mask, and the glowing boundary all need to stand out as the main
+  // visual layer, not compete with a busy street map underneath them.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
 
   // Same Delhi/Gurugram scope-dimming as index.html: everywhere outside the
