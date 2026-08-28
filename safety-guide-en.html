@@ -74,6 +74,7 @@
     border-bottom:1px solid var(--border);
     flex-wrap:wrap;
     z-index:1000;
+    box-shadow:0 1px 3px rgba(20,20,30,0.04);
   }
   .title-block{display:flex;flex-direction:column;gap:2px;min-width:180px;padding-top:2px;}
   .title-block h1{font-size:16px;margin:0;font-weight:650;}
@@ -150,8 +151,11 @@
   #sidebar .note{
     font-size:11.5px;
     color:var(--text-muted);
-    padding:0 14px 10px;
     line-height:1.4;
+    margin:0 14px 10px;
+    padding:8px 10px;
+    background:var(--bg);
+    border-radius:8px;
   }
   #tactic-list{
     flex:1;
@@ -162,16 +166,22 @@
     gap:8px;
   }
   .tactic-card{
+    position:relative;
     border:1px solid var(--border);
     border-radius:10px;
     padding:10px 12px;
     cursor:pointer;
-    transition:background .12s ease;
+    transition:background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .1s ease;
     display:flex;
     gap:10px;
     align-items:flex-start;
   }
-  .tactic-card:hover{background:var(--bg);}
+  .tactic-card:hover{background:var(--bg);box-shadow:0 2px 8px rgba(20,20,30,0.07);}
+  .tactic-card:active{transform:scale(0.99);}
+  .tactic-card.active{border-color:var(--accent);background:var(--bg);box-shadow:0 0 0 1px var(--accent);}
+  .tactic-card.active::before{
+    content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:3px;border-radius:2px;background:var(--accent);
+  }
   .tactic-card .top-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
   .tactic-card .date{font-size:11px;color:var(--text-muted);margin-left:auto;}
   .tag{
@@ -198,6 +208,13 @@
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 1px 4px rgba(0,0,0,0.45);
     border:2px solid #fff;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .marker-tactic:hover{transform:scale(1.12);}
+  .marker-tactic.marker-selected{
+    transform:scale(1.2);
+    box-shadow:0 0 0 4px rgba(15,118,110,0.35), 0 2px 6px rgba(0,0,0,0.5);
   }
 
   .leaflet-popup-content{font-size:13px;min-width:220px;}
@@ -207,6 +224,23 @@
   .leaflet-popup-content .popup-summary{margin-bottom:6px;}
   .leaflet-popup-content .popup-avoid{font-size:12px;background:var(--bg);border-radius:8px;padding:6px 8px;}
   .leaflet-popup-content .popup-avoid b{color:var(--accent);}
+  .leaflet-popup-content-wrapper{border-radius:12px;}
+
+  .legend-ctrl{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    box-shadow:var(--shadow);padding:8px 10px;font-size:11.5px;width:190px;
+  }
+  .legend-ctrl .legend-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;
+    font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-size:10.5px;
+  }
+  .legend-ctrl .chev{transition:transform .15s ease;font-size:10px;}
+  .legend-ctrl.collapsed .legend-body{display:none;}
+  .legend-ctrl.collapsed .chev{transform:rotate(-90deg);}
+  .legend-body{margin-top:7px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+  .legend-row{display:flex;align-items:center;gap:7px;}
+  .legend-row .tactic-icon{width:20px;height:20px;}
+  .legend-row .label{color:var(--text);line-height:1.25;}
 
   .leaflet-control-attribution{font-size:10.5px;}
   .ncr-boundary-glow{
@@ -389,7 +423,27 @@
   function addMarker(t){
     var m = L.marker([t.lat, t.lng], {icon: makeIcon(t)}).addTo(map);
     m.bindPopup(popupHtml(t));
+    m.on('click', function(){ setActiveTactic(t.id); });
     markers[t.id] = m;
+  }
+
+  var activeTacticId = null;
+
+  // Keeps the map marker and the sidebar card in sync: clicking either one
+  // highlights both, so it's always clear which tactic is currently open.
+  function setActiveTactic(id){
+    activeTacticId = id;
+    document.querySelectorAll('.tactic-card').forEach(function(el){
+      el.classList.toggle('active', Number(el.dataset.id) === id);
+    });
+    var activeCard = document.querySelector('.tactic-card[data-id="'+id+'"]');
+    if(activeCard) activeCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+    Object.keys(markers).forEach(function(mid){
+      var el = markers[mid].getElement();
+      if(!el) return;
+      var badge = el.querySelector('.marker-tactic');
+      if(badge) badge.classList.toggle('marker-selected', Number(mid) === id);
+    });
   }
 
   function refreshCounts(){
@@ -422,7 +476,7 @@
       return;
     }
     list.innerHTML = visible.map(function(t){
-      return '<div class="tactic-card" onclick="focusTactic('+t.id+')">'+
+      return '<div class="tactic-card'+(t.id===activeTacticId ? ' active' : '')+'" data-id="'+t.id+'" onclick="focusTactic('+t.id+')">'+
         '<div class="tactic-icon '+t.type+'">'+iconSvg(t.icon, 20)+'</div>'+
         '<div>'+
           '<div class="top-row"><span class="tag '+t.type+'">'+t.type+'</span><span class="date">'+escapeHtml(t.area)+'</span></div>'+
@@ -440,6 +494,7 @@
     map.setView([t.lat, t.lng], 15, {animate:true});
     var m = markers[id];
     if(m){ if(!map.hasLayer(m)) m.addTo(map); m.openPopup(); }
+    setActiveTactic(id);
   }
 
   function toggleFilter(el, val){
@@ -447,16 +502,46 @@
     el.classList.toggle('off', !activeFilters[val]);
     refreshVisibility();
     renderList();
+    renderLegend();
   }
 
   function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('hidden');
   }
 
+  // A small always-visible legend docked on the map itself, so tactics can
+  // be identified by icon while panning around without opening the sidebar.
+  var legendControl = L.control({position:'bottomleft'});
+  legendControl.onAdd = function(){
+    var div = L.DomUtil.create('div', 'legend-ctrl');
+    div.innerHTML = '<div class="legend-head" onclick="toggleLegend()" tabindex="0" role="button" '+
+                     'onkeydown="if(event.key===\'Enter\')toggleLegend()">Icon Key<span class="chev">&#9662;</span></div>'+
+                     '<div class="legend-body" id="legend-body"></div>';
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.disableScrollPropagation(div);
+    return div;
+  };
+  legendControl.addTo(map);
+
+  function toggleLegend(){
+    document.querySelector('.legend-ctrl').classList.toggle('collapsed');
+  }
+
+  function renderLegend(){
+    var body = document.getElementById('legend-body');
+    if(!body) return;
+    var visible = tactics.filter(isVisible);
+    body.innerHTML = visible.map(function(t){
+      return '<div class="legend-row"><div class="tactic-icon '+t.type+'">'+iconSvg(t.icon, 13)+'</div>'+
+             '<span class="label">'+escapeHtml(t.name)+'</span></div>';
+    }).join('');
+  }
+
   // init
   tactics.forEach(addMarker);
   refreshCounts();
   renderList();
+  renderLegend();
 </script>
 </body>
 </html>
