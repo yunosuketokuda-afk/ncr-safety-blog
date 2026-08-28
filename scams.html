@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCR Scam Awareness Guide</title>
+<meta name="description" content="An illustrated guide to commonly reported scam, theft, and safety tactics for international visitors to Delhi and Gurugram, mapped by area.">
+<meta property="og:title" content="NCR Scam Awareness Guide — Delhi &amp; Gurugram">
+<meta property="og:description" content="Illustrated common scam and safety tactics for visitors to Delhi and Gurugram, shown on a map.">
+<meta property="og:url" content="https://yunosuketokuda-afk.github.io/ncr-safety-blog/scams.html">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --panel:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --text-muted:#6b7280;
+    --scam:#7c3aed;
+    --scam-bg:#f3e8ff;
+    --theft:#0d9488;
+    --theft-bg:#ccfbf1;
+    --violence:#4338ca;
+    --violence-bg:#e0e7ff;
+    --area:#0891b2;
+    --area-bg:#cffafe;
+    --accent:#0f766e;
+    --accent-hover:#0d5f59;
+    --shadow: 0 2px 10px rgba(20,20,30,0.08), 0 1px 2px rgba(20,20,30,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161a;
+      --panel:#1d2027;
+      --border:#2c303a;
+      --text:#eceef2;
+      --text-muted:#9aa1ad;
+      --scam-bg:#2c1a4a;
+      --theft-bg:#0f2e2a;
+      --violence-bg:#20204a;
+      --area-bg:#123a42;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161a;
+    --panel:#1d2027;
+    --border:#2c303a;
+    --text:#eceef2;
+    --text-muted:#9aa1ad;
+    --scam-bg:#2c1a4a;
+    --theft-bg:#0f2e2a;
+    --violence-bg:#20204a;
+    --area-bg:#123a42;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+  header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 16px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+    z-index:1000;
+  }
+  .title-block{display:flex;flex-direction:column;gap:2px;min-width:180px;padding-top:2px;}
+  .title-block h1{font-size:16px;margin:0;font-weight:650;}
+  .title-block span{font-size:12px;color:var(--text-muted);}
+  .title-block .switch-lang{font-size:11px;color:var(--text-muted);text-decoration:none;}
+  .title-block .switch-lang:hover{color:var(--accent);}
+  .toolbar{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .chip-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .chip-group .group-label{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--text-muted);margin-right:1px;
+  }
+  .actions-group{display:flex;align-items:center;gap:8px;padding-top:1px;}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    padding:6px 12px;
+    font-size:13px;
+    font-weight:560;
+    cursor:pointer;
+    user-select:none;
+    transition:opacity .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  .chip:active{transform:scale(0.97);}
+  .chip .shape{width:11px;height:11px;flex:none;display:flex;align-items:center;justify-content:center;}
+  .chip.off{opacity:0.4;}
+  .chip.scam{background:var(--scam-bg);color:var(--scam);border-color:transparent;}
+  .chip.theft{background:var(--theft-bg);color:var(--theft);border-color:transparent;}
+  .chip.violence{background:var(--violence-bg);color:var(--violence);border-color:transparent;}
+  .chip.area{background:var(--area-bg);color:var(--area);border-color:transparent;}
+  .chip.area .shape{border-radius:50%;background:currentColor;}
+  button.btn{
+    display:flex;align-items:center;gap:6px;
+    border:none;
+    border-radius:8px;
+    background:var(--accent);
+    color:#fff;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  button.btn:hover{background:var(--accent-hover);}
+  button.btn.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  button.btn.secondary:hover{background:var(--bg);}
+  #layout{flex:1;display:flex;min-height:0;}
+  #map{flex:1;min-width:0;}
+  #sidebar{
+    width:320px;
+    flex:none;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #sidebar.hidden{display:none;}
+  #sidebar h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--text-muted);
+    margin:0;
+    padding:12px 14px 8px;
+  }
+  #sidebar .note{
+    font-size:11.5px;
+    color:var(--text-muted);
+    padding:0 14px 10px;
+    line-height:1.4;
+  }
+  #tactic-list{
+    flex:1;
+    overflow-y:auto;
+    padding:0 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .tactic-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition:background .12s ease;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .tactic-card:hover{background:var(--bg);}
+  .tactic-card .top-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
+  .tactic-card .date{font-size:11px;color:var(--text-muted);margin-left:auto;}
+  .tag{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+    padding:2px 7px;border-radius:999px;
+  }
+  .tag.scam{background:var(--scam-bg);color:var(--scam);}
+  .tag.theft{background:var(--theft-bg);color:var(--theft);}
+  .tag.violence{background:var(--violence-bg);color:var(--violence);}
+  .tactic-card .name{font-size:13.5px;font-weight:600;margin:0 0 2px;}
+  .tactic-card .summary{font-size:12.5px;color:var(--text-muted);margin:0 0 4px;}
+  .tactic-card .avoid{font-size:12px;color:var(--text);margin:0;}
+  .tactic-card .avoid b{color:var(--accent);}
+  .empty-state{padding:16px;font-size:12.5px;color:var(--text-muted);}
+
+  .tactic-icon{flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+  .tactic-card .tactic-icon{width:38px;height:38px;}
+  .tactic-icon.scam{background:var(--scam);}
+  .tactic-icon.theft{background:var(--theft);}
+  .tactic-icon.violence{background:var(--violence);}
+
+  .marker-tactic{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 4px rgba(0,0,0,0.45);
+    border:2px solid #fff;
+  }
+
+  .leaflet-popup-content{font-size:13px;min-width:220px;}
+  .leaflet-popup-content .tag{margin:0 4px 6px 0;}
+  .leaflet-popup-content .popup-icon{width:44px;height:44px;margin-bottom:6px;}
+  .leaflet-popup-content .popup-name{font-weight:650;margin:2px 0 4px;font-size:13.5px;}
+  .leaflet-popup-content .popup-summary{margin-bottom:6px;}
+  .leaflet-popup-content .popup-avoid{font-size:12px;background:var(--bg);border-radius:8px;padding:6px 8px;}
+  .leaflet-popup-content .popup-avoid b{color:var(--accent);}
+
+  .leaflet-control-attribution{font-size:10.5px;}
+  .ncr-boundary-glow{
+    filter: drop-shadow(0 0 3px rgba(45,212,191,0.9)) drop-shadow(0 0 9px rgba(45,212,191,0.55));
+  }
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>NCR Scam Awareness Guide</h1>
+    <span>Illustrated common scam &amp; safety tactics &middot; Delhi &amp; Gurugram</span>
+    <a class="switch-lang" href="index.html">Japanese field-notes version (real reports) &rarr;</a>
+  </div>
+  <div class="toolbar">
+    <div class="chip-group" id="type-group">
+      <span class="group-label">Type</span>
+      <div class="chip scam" data-val="scam" onclick="toggleFilter(this,'scam')">
+        <span class="shape">●</span><span id="count-type-scam">0</span> Scam
+      </div>
+      <div class="chip theft" data-val="theft" onclick="toggleFilter(this,'theft')">
+        <span class="shape">■</span><span id="count-type-theft">0</span> Theft
+      </div>
+      <div class="chip violence" data-val="violence" onclick="toggleFilter(this,'violence')">
+        <span class="shape">▲</span><span id="count-type-violence">0</span> Violence
+      </div>
+    </div>
+    <div class="chip-group" id="area-group">
+      <span class="group-label">Highlight</span>
+      <div class="chip area" data-val="delhi" onclick="toggleArea(this,'delhi')">
+        <span class="shape"></span> Delhi
+      </div>
+      <div class="chip area" data-val="gurugram" onclick="toggleArea(this,'gurugram')">
+        <span class="shape"></span> Gurugram
+      </div>
+    </div>
+    <div class="actions-group">
+      <button class="btn secondary" onclick="toggleSidebar()">List</button>
+    </div>
+  </div>
+</header>
+
+<div id="layout">
+  <div id="map"></div>
+  <div id="sidebar">
+    <h2>Common Tactics</h2>
+    <div class="note">Illustrated, generalized patterns for traveler awareness — not tied to a specific dated incident or source article.</div>
+    <div id="tactic-list"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // ---- tactic data ----
+  // This page is illustrative, not report-based: each entry describes a
+  // commonly known scam/theft/safety PATTERN at a well-known area, not a
+  // specific dated incident with a source link. It is the English
+  // counterpart to index.html (which stays report-based and Japanese-only).
+  // The map itself (Delhi/Gurugram boundaries, zoom, area toggle) matches
+  // index.html exactly.
+  var tactics = [
+    {id:1, name:"Fake \"Tourism Office\" Redirect", type:"scam", icon:"badge", area:"India Gate / Connaught Place", summary:"A friendly stranger strikes up conversation near a landmark and offers a free rickshaw tour, then leads visitors to an unofficial travel agency displaying a fake \"Ministry of Tourism\" sign that pressures them into an overpriced multi-day package.", avoid:"Book tours only through your hotel or a pre-vetted operator. Real government tourism offices don't recruit customers on the street.", lat:28.6129, lng:77.2295},
+    {id:2, name:"\"Your Train Is Cancelled\" Redirect", type:"scam", icon:"train", area:"New Delhi Railway Station", summary:"Someone claims the platform is closed, your train is cancelled, or election/monsoon disruptions block the route, then guides travelers away from the station to a private travel agency instead.", avoid:"Check train status only on the official IRCTC app or with uniformed railway staff at the information counter inside the station.", lat:28.6435, lng:77.2140},
+    {id:3, name:"Rigged Taxi Meter / Long Route", type:"scam", icon:"taxi", area:"IGI Airport", summary:"Drivers take a deliberately roundabout route, claim the meter is broken, or simply demand a high flat fare once the ride is already underway.", avoid:"Use the official prepaid taxi counter or a ride-hailing app, and follow the route on your own phone's map.", lat:28.5562, lng:77.1000},
+    {id:4, name:"Street \"Ear Cleaning\" Health Scam", type:"scam", icon:"ear", area:"Connaught Place", summary:"A self-described ear specialist offers a free inspection, then inserts something into the ear and demands escalating cash payments to stop.", avoid:"Politely decline all unsolicited medical, grooming, or massage offers from strangers on the street.", lat:28.6330, lng:77.2175},
+    {id:5, name:"Gem / Carpet \"Investment\" Scam", type:"scam", icon:"gem", area:"Karol Bagh / Old Delhi markets", summary:"A shop convinces a traveler that gems, carpets, or spices bought cheaply can be resold for a large profit back home, then arranges a \"shipping\" deal for goods that never arrive or are worthless.", avoid:"Never buy anything framed as a resale investment — only pay for what you can personally inspect and carry.", lat:28.6519, lng:77.1909},
+    {id:6, name:"Currency Short-Counting", type:"scam", icon:"cash", area:"Paharganj", summary:"A vendor or money changer counts change quickly and hands back less than owed, or swaps a large note for a smaller one during a distracting handoff.", avoid:"Count all cash slowly and openly before completing a transaction, and count it again afterward.", lat:28.6440, lng:77.2110},
+    {id:7, name:"Crowd Pickpocketing", type:"theft", icon:"wallet", area:"Chandni Chowk market", summary:"In dense markets, pickpockets work in pairs — one creates a bump or distraction while another lifts a wallet or phone from a bag or pocket.", avoid:"Keep valuables in a zipped front pocket or money belt, and keep bags closed and worn to the front in crowds.", lat:28.6506, lng:77.2303},
+    {id:8, name:"Distraction Bag-Snatching Team", type:"theft", icon:"bag", area:"Cyber Hub, Gurugram", summary:"A group distracts a visitor — asking for directions, offering photos, or a staged spill — while an accomplice grabs an unattended bag or phone off a table.", avoid:"Never leave a bag or phone unattended on a table or chair, even for a moment.", lat:28.4950, lng:77.0891},
+    {id:9, name:"Aggressive Begging / Child Gangs", type:"violence", icon:"palm", area:"Chandni Chowk area", summary:"Groups of children, often directed by adults who take most of what is collected, surround visitors, grab at clothing or arms, and don't back off easily when refused.", avoid:"Keep walking calmly toward a shop or crowd rather than stopping to argue; avoid handing out cash directly.", lat:28.6490, lng:77.2280},
+    {id:10, name:"Nightlife Area Harassment", type:"violence", icon:"alert", area:"Sector 29, Gurugram", summary:"Around bar streets late at night, groups of men or persistent beggars can surround and closely follow visitors, escalating if ignored for too long.", avoid:"Travel in a group after dark, keep a ride-hailing app ready, and leave promptly if you feel surrounded.", lat:28.4593, lng:77.0724}
+  ];
+
+  var activeFilters = {scam:true, theft:true, violence:true};
+  var markers = {};
+
+  var map = L.map('map', {zoomControl:true}).setView([28.56, 77.15], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Same Delhi/Gurugram scope-dimming as index.html: everywhere outside the
+  // two districts is darkened (still visible underneath) once someone
+  // zooms/pans out, traced with a soft glow along the real boundaries.
+  var DELHI_BOUNDARY = [[28.5825,76.8394],[28.5500,76.8459],[28.5437,76.8644],[28.5203,76.8871],[28.5056,76.8805],[28.5014,76.8854],[28.5138,76.9069],[28.5053,76.9528],[28.5213,76.9784],[28.5147,77.0101],[28.5211,77.0170],[28.5335,77.0017],[28.5405,77.0135],[28.5252,77.0434],[28.5166,77.0462],[28.5119,77.0672],[28.5203,77.0723],[28.5180,77.0804],[28.4951,77.1195],[28.4732,77.1125],[28.4428,77.1277],[28.4285,77.1628],[28.4062,77.1715],[28.4102,77.2179],[28.4250,77.2500],[28.4544,77.2459],[28.4585,77.2331],[28.4788,77.2434],[28.4965,77.2902],[28.4834,77.3141],[28.5135,77.3453],[28.5563,77.2998],[28.5762,77.2929],[28.5965,77.3134],[28.6051,77.3412],[28.6236,77.3404],[28.6377,77.3168],[28.6779,77.3252],[28.6816,77.3330],[28.6987,77.3237],[28.7132,77.3311],[28.7064,77.2913],[28.7227,77.2909],[28.7356,77.2757],[28.7385,77.2558],[28.7526,77.2587],[28.7592,77.2381],[28.7750,77.2329],[28.7792,77.2210],[28.7846,77.2280],[28.7867,77.2073],[28.7970,77.2000],[28.8136,77.2021],[28.8108,77.2187],[28.8223,77.2237],[28.8558,77.2142],[28.8585,77.1752],[28.8368,77.1580],[28.8381,77.1453],[28.8617,77.1402],[28.8580,77.1219],[28.8834,77.0826],[28.8672,77.0747],[28.8680,77.0583],[28.8318,77.0402],[28.8396,76.9944],[28.8215,76.9803],[28.8277,76.9658],[28.8149,76.9617],[28.8161,76.9492],[28.7987,76.9419],[28.7903,76.9540],[28.7798,76.9483],[28.7677,76.9557],[28.7539,76.9444],[28.7428,76.9588],[28.7299,76.9598],[28.7125,76.9481],[28.6992,76.9680],[28.6696,76.9545],[28.6702,76.9374],[28.6496,76.9245],[28.6331,76.9444],[28.6272,76.9424],[28.6184,76.9353],[28.6315,76.9191],[28.6236,76.9065],[28.6318,76.8894],[28.5855,76.8646],[28.5825,76.8394]];
+  var GURUGRAM_BOUNDARY = [[28.3071,76.6510],[28.3025,76.6671],[28.3167,76.6737],[28.3138,76.6857],[28.2693,76.6738],[28.2631,76.6784],[28.2634,76.7148],[28.2401,76.7690],[28.2237,76.7813],[28.2556,76.7976],[28.2536,76.8114],[28.2406,76.8125],[28.2442,76.8256],[28.2344,76.8577],[28.2623,76.8763],[28.2523,76.8991],[28.2767,76.9180],[28.3006,76.9050],[28.2993,76.9164],[28.3243,76.9332],[28.3127,76.9516],[28.3269,76.9611],[28.3256,76.9712],[28.3346,76.9786],[28.3257,76.9995],[28.3052,77.0110],[28.2481,77.0215],[28.2441,77.0563],[28.2230,77.0548],[28.2165,77.0621],[28.2147,77.0712],[28.2300,77.0816],[28.2193,77.0942],[28.2273,77.1027],[28.2179,77.1210],[28.2266,77.1339],[28.2006,77.1715],[28.2118,77.2023],[28.2293,77.2015],[28.2353,77.1911],[28.2452,77.1953],[28.2793,77.2419],[28.2989,77.2082],[28.2894,77.2008],[28.3177,77.1567],[28.3838,77.1514],[28.4046,77.1741],[28.4285,77.1628],[28.4428,77.1277],[28.4732,77.1125],[28.4951,77.1195],[28.5180,77.0804],[28.5203,77.0723],[28.5119,77.0672],[28.5166,77.0462],[28.5252,77.0434],[28.5409,77.0078],[28.5310,77.0013],[28.5211,77.0170],[28.5147,77.0101],[28.5213,76.9784],[28.5053,76.9528],[28.5138,76.9069],[28.5008,76.8919],[28.5047,76.8819],[28.4978,76.8743],[28.5041,76.8248],[28.4751,76.8109],[28.4642,76.7913],[28.4774,76.7717],[28.4595,76.7602],[28.4612,76.7507],[28.4700,76.7349],[28.4863,76.7260],[28.4929,76.7050],[28.4576,76.7071],[28.4357,76.7175],[28.4001,76.7083],[28.3748,76.7353],[28.3565,76.7265],[28.3541,76.7157],[28.3790,76.6693],[28.3071,76.6510]];
+
+  var WORLD_RING = [[-90,-180],[-90,180],[90,180],[90,-180]];
+  var activeAreas = {delhi:true, gurugram:true};
+
+  var maskLayer = L.polygon([WORLD_RING, DELHI_BOUNDARY, GURUGRAM_BOUNDARY], {
+    stroke: false,
+    fillColor: '#0a0d12',
+    fillOpacity: 0.55,
+    interactive: false
+  }).addTo(map);
+
+  var areaGlow = {
+    delhi: L.polygon(DELHI_BOUNDARY, {
+      className: 'ncr-boundary-glow', fill: false, color: '#2dd4bf', weight: 1.6, opacity: 0.9, interactive: false
+    }).addTo(map),
+    gurugram: L.polygon(GURUGRAM_BOUNDARY, {
+      className: 'ncr-boundary-glow', fill: false, color: '#2dd4bf', weight: 1.6, opacity: 0.9, interactive: false
+    }).addTo(map)
+  };
+
+  function rebuildMask(){
+    var rings = [WORLD_RING];
+    if(activeAreas.delhi) rings.push(DELHI_BOUNDARY);
+    if(activeAreas.gurugram) rings.push(GURUGRAM_BOUNDARY);
+    maskLayer.setLatLngs(rings);
+  }
+
+  function toggleArea(el, val){
+    activeAreas[val] = !activeAreas[val];
+    el.classList.toggle('off', !activeAreas[val]);
+    rebuildMask();
+    var glow = areaGlow[val];
+    if(activeAreas[val]){ if(!map.hasLayer(glow)) glow.addTo(map); }
+    else { if(map.hasLayer(glow)) map.removeLayer(glow); }
+  }
+
+  function typeColor(type){
+    if(type === 'scam') return '#7c3aed';
+    if(type === 'theft') return '#0d9488';
+    return '#4338ca'; // violence
+  }
+
+  // Hand-drawn line-icon library, one per tactic — this is the
+  // "illustration" layer: markers, popups, and list cards all render the
+  // same icon inside a colored badge, instead of the plain circle/square/
+  // triangle shapes used for the (unrelated) report map in index.html.
+  var ICON_PATHS = {
+    badge:  '<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="9" r="2.2"/><path d="M8 17h8M8.5 14h7"/>',
+    train:  '<rect x="5" y="5" width="14" height="11" rx="3"/><circle cx="8.5" cy="19" r="1.4" fill="#fff"/><circle cx="15.5" cy="19" r="1.4" fill="#fff"/><line x1="3" y1="3" x2="21" y2="21"/>',
+    taxi:   '<rect x="3" y="10" width="18" height="6" rx="2"/><path d="M6 10l2-4h8l2 4"/><circle cx="7.5" cy="17.5" r="1.6" fill="#fff"/><circle cx="16.5" cy="17.5" r="1.6" fill="#fff"/>',
+    ear:    '<path d="M9 3.5c3.5-1.5 8 0.5 8 5 0 3.2-2.3 4.3-2.6 7-0.2 2-1.7 3.5-3.6 3.2-1.6-0.3-2.3-1.7-1.8-3 0.5-1.3 1.6-1.6 1.6-3 0-2.4-3.4-3-3.4-6.2 0-1.4 0.7-2.4 1.8-3z"/>',
+    gem:    '<path d="M4.5 9L8 3.5h8L19.5 9 12 20.5z"/><path d="M4.5 9h15M9.5 3.5L8 9l4 0M14.5 3.5L16 9h-4"/>',
+    cash:   '<rect x="3" y="7" width="18" height="10" rx="1.6"/><circle cx="12" cy="12" r="2.4"/><path d="M6 9v6M18 9v6"/>',
+    wallet: '<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M3 11h18"/><circle cx="16" cy="14.2" r="1.1" fill="#fff"/>',
+    bag:    '<rect x="6" y="8" width="12" height="11" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M1.5 10.5L4 9.5M1.5 13.5L4 13"/>',
+    palm:   '<path d="M8 21v-7.5a1.3 1.3 0 0 1 2.6 0V15M10.6 13.5V10a1.3 1.3 0 0 1 2.6 0v3.6M13.2 10.2V9a1.3 1.3 0 0 1 2.6 0v4.6M15.8 10.6a1.3 1.3 0 0 1 2.6 0V16c0 3-2 5-5 5H10c-1.6 0-2.6-.6-3.4-1.8L4 14.8"/>',
+    alert:  '<path d="M12 3.5L21 19.5H3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="16.7" r="0.9" fill="#fff"/>'
+  };
+
+  function iconSvg(iconKey, size){
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+
+           ICON_PATHS[iconKey]+'</svg>';
+  }
+
+  function makeIcon(t){
+    var html = '<div class="marker-tactic" style="background:'+typeColor(t.type)+';">'+iconSvg(t.icon, 19)+'</div>';
+    return L.divIcon({
+      className:'',
+      html: html,
+      iconSize:[34,34],
+      iconAnchor:[17,17],
+      popupAnchor:[0,-17]
+    });
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function popupHtml(t){
+    return '<div class="popup-icon tactic-icon '+t.type+'" style="width:44px;height:44px;">'+iconSvg(t.icon, 24)+'</div>'+
+           '<span class="tag '+t.type+'">'+t.type+'</span>'+
+           '<div class="popup-name">'+escapeHtml(t.name)+'</div>'+
+           '<div class="popup-summary">'+escapeHtml(t.summary)+'</div>'+
+           '<div class="popup-avoid"><b>Avoid it:</b> '+escapeHtml(t.avoid)+'</div>';
+  }
+
+  function addMarker(t){
+    var m = L.marker([t.lat, t.lng], {icon: makeIcon(t)}).addTo(map);
+    m.bindPopup(popupHtml(t));
+    markers[t.id] = m;
+  }
+
+  function refreshCounts(){
+    ['scam','theft','violence'].forEach(function(type){
+      var n = tactics.filter(function(t){return t.type===type;}).length;
+      document.getElementById('count-type-'+type).textContent = n;
+    });
+  }
+
+  function isVisible(t){
+    return activeFilters[t.type];
+  }
+
+  function refreshVisibility(){
+    tactics.forEach(function(t){
+      var m = markers[t.id];
+      if(!m) return;
+      var shouldShow = isVisible(t);
+      var onMap = map.hasLayer(m);
+      if(shouldShow && !onMap) m.addTo(map);
+      if(!shouldShow && onMap) map.removeLayer(m);
+    });
+  }
+
+  function renderList(){
+    var list = document.getElementById('tactic-list');
+    var visible = tactics.filter(isVisible);
+    if(visible.length === 0){
+      list.innerHTML = '<div class="empty-state">No tactics match the current filters.</div>';
+      return;
+    }
+    list.innerHTML = visible.map(function(t){
+      return '<div class="tactic-card" onclick="focusTactic('+t.id+')">'+
+        '<div class="tactic-icon '+t.type+'">'+iconSvg(t.icon, 20)+'</div>'+
+        '<div>'+
+          '<div class="top-row"><span class="tag '+t.type+'">'+t.type+'</span><span class="date">'+escapeHtml(t.area)+'</span></div>'+
+          '<p class="name">'+escapeHtml(t.name)+'</p>'+
+          '<p class="summary">'+escapeHtml(t.summary)+'</p>'+
+          '<p class="avoid"><b>Avoid it:</b> '+escapeHtml(t.avoid)+'</p>'+
+        '</div>'+
+        '</div>';
+    }).join('');
+  }
+
+  function focusTactic(id){
+    var t = tactics.find(function(x){return x.id===id;});
+    if(!t) return;
+    map.setView([t.lat, t.lng], 15, {animate:true});
+    var m = markers[id];
+    if(m){ if(!map.hasLayer(m)) m.addTo(map); m.openPopup(); }
+  }
+
+  function toggleFilter(el, val){
+    activeFilters[val] = !activeFilters[val];
+    el.classList.toggle('off', !activeFilters[val]);
+    refreshVisibility();
+    renderList();
+  }
+
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('hidden');
+  }
+
+  // init
+  tactics.forEach(addMarker);
+  refreshCounts();
+  renderList();
+</script>
+</body>
+</html>
