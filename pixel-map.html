@@ -126,6 +126,7 @@
   <div class="type-btn scam" data-val="scam" onclick="toggleType(this,'scam')"><span class="dot"></span>SCAM</div>
   <div class="type-btn theft" data-val="theft" onclick="toggleType(this,'theft')"><span class="dot"></span>THEFT</div>
   <div class="type-btn violence" data-val="violence" onclick="toggleType(this,'violence')"><span class="dot"></span>VIOLENCE</div>
+  <div class="type-btn" id="sound-btn" onclick="toggleSound()">&#128264; SOUND: OFF</div>
 </div>
 
 <div class="game-frame" id="frame">
@@ -160,6 +161,71 @@
   ];
 
   var activeTypes = {scam:true, theft:true, violence:true};
+
+  // ---- retro chiptune audio (Web Audio API, synthesized — no audio files) ----
+  var audioCtx = null;
+  var soundOn = false;
+  var musicTimer = null;
+  var noteIndex = 0;
+  var MELODY = [523, 587, 659, 784, 880, 784, 659, 587];
+  var BASS   = [131, 131, 196, 196, 131, 131, 196, 196];
+  var NOTE_MS = 260;
+
+  function ensureAudio(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function beep(freq, duration, waveType, startTime, peakGain){
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = waveType;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(peakGain, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  function playSelectSfx(){
+    if(!soundOn) return;
+    ensureAudio();
+    var t = audioCtx.currentTime;
+    beep(880, 0.05, 'square', t, 0.05);
+    beep(1320, 0.06, 'square', t + 0.05, 0.04);
+  }
+
+  function playCloseSfx(){
+    if(!soundOn) return;
+    ensureAudio();
+    var t = audioCtx.currentTime;
+    beep(660, 0.05, 'square', t, 0.04);
+    beep(440, 0.07, 'square', t + 0.05, 0.04);
+  }
+
+  function musicStep(){
+    if(!soundOn) return;
+    var t = audioCtx.currentTime;
+    beep(MELODY[noteIndex % MELODY.length], NOTE_MS/1000*0.85, 'square', t, 0.03);
+    beep(BASS[noteIndex % BASS.length], NOTE_MS/1000*0.85, 'triangle', t, 0.045);
+    noteIndex++;
+    musicTimer = setTimeout(musicStep, NOTE_MS);
+  }
+
+  function toggleSound(){
+    soundOn = !soundOn;
+    var btn = document.getElementById('sound-btn');
+    if(soundOn){
+      ensureAudio();
+      btn.textContent = String.fromCodePoint(0x1F50A) + ' SOUND: ON';
+      noteIndex = 0;
+      musicStep();
+    } else {
+      btn.textContent = String.fromCodePoint(0x1F508) + ' SOUND: OFF';
+      clearTimeout(musicTimer);
+    }
+  }
 
   // Bounding box across both real boundaries, with a little padding.
   var B = (function(){
@@ -281,6 +347,7 @@
   }
 
   function toggleType(el, val){
+    playSelectSfx();
     activeTypes[val] = !activeTypes[val];
     el.classList.toggle('off', !activeTypes[val]);
     document.querySelectorAll('.sprite.'+val).forEach(function(s){
@@ -291,6 +358,7 @@
   function openDialog(id){
     var t = tactics.find(function(x){ return x.id === id; });
     if(!t) return;
+    playSelectSfx();
     document.getElementById('hint').style.display = 'none';
     var content = document.getElementById('dialog-content');
     content.innerHTML =
@@ -303,6 +371,7 @@
   }
 
   function closeDialog(){
+    playCloseSfx();
     document.getElementById('dialog').classList.remove('open');
   }
 
